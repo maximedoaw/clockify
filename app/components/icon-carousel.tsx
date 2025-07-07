@@ -14,8 +14,8 @@ export interface CarouselItem {
 
 interface IconCarouselProps {
   items: CarouselItem[]
-  activeItem: string
-  onItemClick: (itemId: string) => void
+  activeItem?: string
+  onItemClick?: (itemId: string) => void
   className?: string
 }
 
@@ -91,7 +91,7 @@ export function IconCarousel({ items, activeItem, onItemClick, className = "" }:
           return (
             <button
               key={item.id}
-              onClick={() => onItemClick(item.id)}
+              onClick={() => onItemClick?.(item.id)}
               className={`flex min-w-fit flex-col items-center space-y-3 rounded-lg p-4 transition-all duration-300 hover:bg-muted/50 ${
                 isActive ? "text-blue-500" : "text-muted-foreground hover:text-foreground"
               }`}

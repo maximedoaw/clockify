@@ -4,76 +4,9 @@ import { useState } from "react"
 import { Clock, DollarSign, Calendar, Users, BarChart3, CreditCard, ArrowRight } from "lucide-react"
 import { IconCarousel, type CarouselItem } from "./icon-carousel"
 import { Button } from "@/components/ui/button"
+import { defaultCarouselItems, defaultContentItems, WhyClockifySectionProps } from "@/constant"
 
-interface ContentItem {
-  id: string
-  title: string
-  description: string
-  image: string
-  learnMoreUrl?: string
-}
 
-interface WhyClockifySectionProps {
-  title?: string
-  carouselItems?: CarouselItem[]
-  contentItems?: ContentItem[]
-  defaultActiveItem?: string
-  className?: string
-}
-
-const defaultCarouselItems: CarouselItem[] = [
-  { id: "timekeeping", label: "Timekeeping", icon: Clock },
-  { id: "budgeting", label: "Budgeting", icon: DollarSign },
-  { id: "planning", label: "Planning", icon: Calendar },
-  { id: "attendance", label: "Attendance", icon: Users },
-  { id: "reporting", label: "Reporting", icon: BarChart3 },
-  { id: "payroll", label: "Payroll", icon: CreditCard },
-]
-
-const defaultContentItems: ContentItem[] = [
-  {
-    id: "timekeeping",
-    title: "Timekeeping",
-    description: "Track time using a timer, clock-in kiosk, or timesheet.",
-    image: "/img1.jpg",
-    learnMoreUrl: "#",
-  },
-  {
-    id: "budgeting",
-    title: "Budgeting",
-    description: "Set project budgets and track spending in real-time.",
-    image: "/img2.jpg",
-    learnMoreUrl: "#",
-  },
-  {
-    id: "planning",
-    title: "Planning",
-    description: "Plan projects and allocate resources efficiently.",
-    image: "/img3.jpg",
-    learnMoreUrl: "#",
-  },
-  {
-    id: "attendance",
-    title: "Attendance",
-    description: "Monitor team attendance and working hours.",
-    image: "/img4.jpg",
-    learnMoreUrl: "#",
-  },
-  {
-    id: "reporting",
-    title: "Reporting",
-    description: "Generate detailed reports and analytics.",
-    image: "/img5.jpg",
-    learnMoreUrl: "#",
-  },
-  {
-    id: "payroll",
-    title: "Payroll",
-    description: "Streamline payroll processing with accurate time data.",
-    image: "/img1.jpg",
-    learnMoreUrl: "#",
-  },
-]
 
 export function WhyClockifySection({
   title = "Why track time with Clockify",

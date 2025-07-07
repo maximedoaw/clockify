@@ -2,6 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Star, Users } from "lucide-react"
+import { IconCarousel } from "./icon-carousel"
+import { defaultCarouselItems } from "@/constant"
+import { usePathname } from "next/navigation"
 
 const companyLogos = [
   "Hewlett Packard Enterprise",
@@ -15,21 +18,21 @@ const companyLogos = [
   "Paysafe",
 ]
 
-export function HeroSection() {
+
+export function HeroSection({title="", subtitle=""} : {title: string, subtitle: string}) {
+  const pathname = usePathname()
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-background to-muted/20 py-20 sm:py-32">
       <div className="container px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           {/* Main Heading */}
           <h3 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-            Free Online Time Reporting System
+            {title}
           </h3>
 
           {/* Subtitle */}
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-            {
-              "Clockify's time reporting system lets you and your team see where the time really goes, and export the data."
-            }
+              {subtitle}
           </p>
 
           {/* Rating */}
@@ -54,7 +57,7 @@ export function HeroSection() {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
-
+          {pathname === "/" && <IconCarousel items={defaultCarouselItems} />}
           {/* Social Proof */}
           <div className="mt-6 flex items-center justify-center space-x-2 text-blue-500">
             <Users className="h-4 w-4" />

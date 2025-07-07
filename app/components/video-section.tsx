@@ -1,7 +1,6 @@
 "use client"
 
 import YouTube from "react-youtube"
-import { Play } from "lucide-react"
 import { useState } from "react"
 
 export function VideoSection({videoId} : {videoId : string}) {
@@ -44,15 +43,6 @@ export function VideoSection({videoId} : {videoId : string}) {
                   className="h-full w-full"
                 />
               </div>
-
-
-              {!isPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity hover:bg-black/30">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/90 shadow-lg transition-transform hover:scale-110">
-                    <Play className="ml-1 h-8 w-8 text-gray-900" fill="currentColor" />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
