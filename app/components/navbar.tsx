@@ -459,8 +459,14 @@ export function NavBar() {
 
         {/* Desktop Auth Buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="ghost">Log in</Button>
-          <Button className="bg-blue-500 hover:bg-blue-600">Sign up free</Button>
+                <Link href="/time-tracker">
+                  <Button variant="ghost" className="w-full justify-start">
+                    Log in
+                  </Button>
+                </Link>
+                <Link href="/time-tracker">
+                <Button className="w-full bg-blue-500 hover:bg-blue-600">Sign up free</Button>
+                </Link>
         </div>
 
         {/* Mobile Menu */}
@@ -542,10 +548,14 @@ export function NavBar() {
               </MobileNavItem>
 
               <div className="border-t pt-4 space-y-3">
-                <Button variant="ghost" className="w-full justify-start">
-                  Log in
-                </Button>
+                <Link href="/time-tracker">
+                  <Button variant="ghost" className="w-full justify-start">
+                    Log in
+                  </Button>
+                </Link>
+                <Link href="/time-tracker">
                 <Button className="w-full bg-blue-500 hover:bg-blue-600">Sign up free</Button>
+                </Link>
               </div>
             </div>
           </SheetContent>
