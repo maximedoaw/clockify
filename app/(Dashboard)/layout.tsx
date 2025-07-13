@@ -14,7 +14,9 @@ import {
   Settings,
   ChevronDown,
   Menu as MenuIcon,
-  X as CloseIcon
+  X as CloseIcon,
+  CalendarClock,
+  Clock4
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -22,8 +24,10 @@ interface LayoutProps {
 }
 
 const navLinks = [
+  { href: '/time-sheet', label: 'TIMESHEET', icon: CalendarClock },
   { href: '/time-tracker', label: 'TIME TRACKER', icon: Clock },
   { href: '/calendar', label: 'CALENDAR', icon: Calendar },
+  { href: '/time-off', label: 'TIME OFF', icon: Clock4 },
   { href: '/dashboard', label: 'DASHBOARD', icon: BarChart3 },
   { href: '/reports', label: 'REPORTS', icon: FileText },
   { href: '/projects', label: 'PROJECTS', icon: FileText },

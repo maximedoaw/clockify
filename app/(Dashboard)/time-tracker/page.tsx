@@ -215,7 +215,7 @@ const TimeTrackerDetailed = () => {
           <div className="flex items-center gap-2">
             <Select value={selectedProjectIdx.toString()} onValueChange={v => setSelectedProjectIdx(Number(v))}>
               <SelectTrigger className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-40">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                 <SelectValue placeholder="Projet" />
               </SelectTrigger>
               <SelectContent>
