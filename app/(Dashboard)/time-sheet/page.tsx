@@ -5,7 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ChevronLeft, ChevronRight, Plus, Copy, FileText, LayoutGrid, List, X, Clock, User, FolderOpen, Trash2, Check } from "lucide-react"
-import { useState } from "react"
+import { useState, useRef } from "react"
+import { format, addDays, startOfWeek, addWeeks, isThisWeek } from "date-fns"
 
 export default function TimesheetPage() {
   const [selectedProject, setSelectedProject] = useState("")
@@ -21,7 +22,6 @@ export default function TimesheetPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false)
   const [selectedDay, setSelectedDay] = useState("")
-  const [timeInput, setTimeInput] = useState({ hours: "", minutes: "", seconds: "" })
   const [newProject, setNewProject] = useState({
     name: "",
     client: "",
@@ -42,6 +42,27 @@ export default function TimesheetPage() {
       sunday: string
     }
   }>>([])
+
+  // Nouvelle structure pour gérer les lignes dynamiques du timesheet
+  const [rows, setRows] = useState<Array<{
+    id: string,
+    projectId: string | null,
+    projectName: string,
+    client: string,
+    template: string,
+    workHours: { [key: string]: string }
+  }>>([])
+  const [projectModalOpen, setProjectModalOpen] = useState(false)
+  const [rowToEdit, setRowToEdit] = useState<string | null>(null)
+  const [newProjectName, setNewProjectName] = useState("")
+  const [newProjectClient, setNewProjectClient] = useState("")
+  const [newProjectTemplate, setNewProjectTemplate] = useState("")
+  const [timeModalOpen, setTimeModalOpen] = useState(false)
+  const [editingRowId, setEditingRowId] = useState<string | null>(null)
+  const [editingDay, setEditingDay] = useState<string>("")
+  const [timeInput, setTimeInput] = useState({ hours: "", minutes: "", seconds: "" })
+
+  const [weekOffset, setWeekOffset] = useState(0)
 
   const clients = [
     { id: "1", name: "Client A" },
@@ -66,6 +87,25 @@ export default function TimesheetPage() {
     { key: "saturday", label: "Sat", short: "Sa" },
     { key: "sunday", label: "Sun", short: "Su" },
   ]
+
+  // Fonction utilitaire pour obtenir les dates de la semaine courante (lundi à dimanche) avec offset
+  const getWeekDates = (offset = 0) => {
+    const today = new Date()
+    const start = startOfWeek(addWeeks(today, offset), { weekStartsOn: 1 })
+    return Array.from({ length: 7 }, (_, i) => addDays(start, i))
+  }
+  const weekDates = getWeekDates(weekOffset)
+
+  // Label dynamique pour la semaine
+  const getWeekLabel = () => {
+    if (weekOffset === 0) return "This week"
+    if (weekOffset === -1) return "Last week"
+    if (weekOffset === 1) return "Next week"
+    // Affiche la plage de dates (ex: 8–14 juil)
+    const start = weekDates[0]
+    const end = weekDates[6]
+    return `${format(start, "d MMM")} – ${format(end, "d MMM")}`
+  }
 
   const handleWorkHoursChange = (day: string, value: string) => {
     setWorkHours(prev => ({
@@ -121,6 +161,18 @@ export default function TimesheetPage() {
       }
     }
     setCreatedProjects(prev => [...prev, newProjectData])
+    // Ajouter une ligne dans le timesheet avec ce projet sélectionné
+    setRows(prev => [
+      ...prev,
+      {
+        id: newProjectData.id + "-row",
+        projectId: newProjectData.id,
+        projectName: newProjectData.name,
+        client: newProjectData.client,
+        template: newProjectData.template,
+        workHours: { ...newProjectData.workHours }
+      }
+    ])
     setIsCreateModalOpen(false)
     setNewProject({ name: "", client: "", template: "" })
   }
@@ -177,6 +229,139 @@ export default function TimesheetPage() {
     return time || "0h 0m 0s"
   }
 
+  // Ajout d'une nouvelle ligne
+  const handleAddRow = () => {
+    setRows(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        projectId: null,
+        projectName: "",
+        client: "",
+        template: "",
+        workHours: {
+          monday: "",
+          tuesday: "",
+          wednesday: "",
+          thursday: "",
+          friday: "",
+          saturday: "",
+          sunday: ""
+        }
+      }
+    ])
+  }
+
+  // Suppression d'une ligne
+  const handleDeleteRow = (rowId: string) => {
+    setRows(prev => prev.filter(row => row.id !== rowId))
+  }
+
+  // Sélection d'un projet existant
+  const handleSelectProject = (rowId: string, projectId: string) => {
+    const project = createdProjects.find(p => p.id === projectId)
+    if (project) {
+      setRows(prev => prev.map(row =>
+        row.id === rowId
+          ? {
+              ...row,
+              projectId: project.id,
+              projectName: project.name,
+              client: project.client,
+              template: project.template,
+              workHours: { ...project.workHours }
+            }
+          : row
+      ))
+    }
+  }
+
+  // Création d'un nouveau projet depuis la ligne
+  const handleCreateProjectFromRow = (rowId: string) => {
+    if (!newProjectName) return
+    const newId = Date.now().toString()
+    const newProj = {
+      id: newId,
+      name: newProjectName,
+      client: newProjectClient,
+      template: newProjectTemplate,
+      workHours: {
+        monday: "",
+        tuesday: "",
+        wednesday: "",
+        thursday: "",
+        friday: "",
+        saturday: "",
+        sunday: ""
+      }
+    }
+    setCreatedProjects(prev => [...prev, newProj])
+    setRows(prev => prev.map(row =>
+      row.id === rowId
+        ? {
+            ...row,
+            projectId: newId,
+            projectName: newProjectName,
+            client: newProjectClient,
+            template: newProjectTemplate
+          }
+        : row
+    ))
+    setProjectModalOpen(false)
+    setNewProjectName("")
+    setNewProjectClient("")
+    setNewProjectTemplate("")
+    setRowToEdit(null)
+  }
+
+  // Saisie des horaires pour chaque jour
+  const openTimeModalForRow = (rowId: string, day: string) => {
+    setEditingRowId(rowId)
+    setEditingDay(day)
+    const row = rows.find(r => r.id === rowId)
+    if (row) {
+      const currentTime = row.workHours[day]
+      if (currentTime) {
+        const match = currentTime.match(/(\d+)h\s*(\d+)m\s*(\d+)s/)
+        if (match) {
+          setTimeInput({ hours: match[1], minutes: match[2], seconds: match[3] })
+        } else {
+          setTimeInput({ hours: "", minutes: "", seconds: "" })
+        }
+      } else {
+        setTimeInput({ hours: "", minutes: "", seconds: "" })
+      }
+    }
+    setTimeModalOpen(true)
+  }
+
+  const saveTimeForRow = () => {
+    if (!editingRowId) return
+    setRows(prev => prev.map(row =>
+      row.id === editingRowId
+        ? {
+            ...row,
+            workHours: {
+              ...row.workHours,
+              [editingDay]: `${timeInput.hours || 0}h ${timeInput.minutes || 0}m ${timeInput.seconds || 0}s`
+            }
+          }
+        : row
+    ))
+    setTimeModalOpen(false)
+    setEditingRowId(null)
+    setEditingDay("")
+  }
+
+  // Sélection du template
+  const handleSelectTemplate = (rowId: string, templateId: string) => {
+    setRows(prev => prev.map(row =>
+      row.id === rowId
+        ? { ...row, template: templateId }
+        : row
+    ))
+  }
+
   return (
     <div className="flex-1 bg-white">
       {/* Header */}
@@ -206,11 +391,11 @@ export default function TimesheetPage() {
 
           {/* Week Navigation */}
           <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-transparent">
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-transparent" onClick={() => setWeekOffset(weekOffset - 1)}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium px-3">This week</span>
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-transparent">
+            <span className="text-sm font-medium px-3">{getWeekLabel()}</span>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-transparent" onClick={() => setWeekOffset(weekOffset + 1)}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -296,139 +481,158 @@ export default function TimesheetPage() {
 
       {/* Timesheet Content */}
       <div className="p-4 sm:p-6">
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          {/* Header Row */}
-          <div className="flex bg-gray-50 border-b border-gray-200 overflow-x-auto">
-            <div className="flex-shrink-0 py-3 px-2 sm:px-4 text-sm font-medium text-gray-700 w-32 sm:w-48 min-w-[128px] sm:min-w-[192px]">
-              Projects
-            </div>
-            <div className="flex-shrink-0 flex justify-center py-3 px-2 sm:px-3 text-sm font-medium text-gray-700 w-20 sm:w-24 min-w-[80px] sm:min-w-[100px]">
-              <div className="text-xs sm:text-sm">Mo, Jul 7</div>
-            </div>
-            <div className="flex-shrink-0 flex justify-center py-3 px-2 sm:px-3 text-sm font-medium text-gray-700 w-20 sm:w-24 min-w-[80px] sm:min-w-[100px]">
-              <div className="text-xs sm:text-sm">Tu, Jul 8</div>
-            </div>
-            <div className="flex-shrink-0 flex justify-center py-3 px-2 sm:px-3 text-sm font-medium text-gray-700 w-20 sm:w-24 min-w-[80px] sm:min-w-[100px]">
-              <div className="text-xs sm:text-sm">We, Jul 9</div>
-            </div>
-            <div className="flex-shrink-0 flex justify-center py-3 px-2 sm:px-3 text-sm font-medium text-gray-700 w-20 sm:w-24 min-w-[80px] sm:min-w-[100px]">
-              <div className="text-xs sm:text-sm">Th, Jul 10</div>
-            </div>
-            <div className="flex-shrink-0 flex justify-center py-3 px-2 sm:px-3 text-sm font-medium text-gray-700 w-20 sm:w-24 min-w-[80px] sm:min-w-[100px]">
-              <div className="text-xs sm:text-sm">Fr, Jul 11</div>
-            </div>
-            <div className="flex-shrink-0 flex justify-center py-3 px-2 sm:px-3 text-sm font-medium text-gray-700 w-20 sm:w-24 min-w-[80px] sm:min-w-[100px]">
-              <div className="text-xs sm:text-sm">Sa, Jul 12</div>
-            </div>
-            <div className="flex-shrink-0 flex justify-center py-3 px-2 sm:px-3 text-sm font-medium text-gray-700 w-20 sm:w-24 min-w-[80px] sm:min-w-[100px]">
-              <div className="text-xs sm:text-sm">Su, Jul 13</div>
-            </div>
-            <div className="flex justify-center py-3 px-2 sm:px-4 text-sm font-medium text-gray-700 w-16 sm:w-20 flex-shrink-0">
-              <div className="text-xs sm:text-sm">Total</div>
-            </div>
-          </div>
-
-          {/* Scrollable Projects Content */}
-          <div className="max-h-96 overflow-y-auto">
-            {createdProjects.length > 0 ? (
-              <div className="space-y-2 p-4">
-                {createdProjects.map((project) => (
-                  <div key={project.id} className="flex items-center border-b border-gray-100 py-3">
-                    {/* Project Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleProjectSelection(project.id)}
-                          className={`h-8 w-8 p-0 ${selectedProject === project.id ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
-                        >
-                          {selectedProject === project.id ? (
-                            <Check className="h-4 w-4" />
-                          ) : (
-                            <div className="h-4 w-4 border-2 border-gray-300 rounded" />
-                          )}
-                        </Button>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-gray-900 truncate">{project.name}</h3>
-                          <p className="text-sm text-gray-500 truncate">
-                            {clients.find(c => c.id === project.client)?.name || "No client"} • 
-                            {templates.find(t => t.id === project.template)?.name || "No template"}
-                          </p>
-                        </div>
-                      </div>
+        <div className="border border-gray-200 rounded-lg overflow-x-auto">
+          <table className="min-w-full table-fixed">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="w-48 min-w-[192px] py-3 px-2 sm:px-4 text-left text-sm font-medium text-gray-700 align-bottom">Projet</th>
+                {days.map((day, idx) => (
+                  <th key={day.key} className="w-20 min-w-[80px] py-1 px-2 sm:px-3 text-center text-sm font-medium text-gray-700 align-bottom">
+                    <div className="text-xs sm:text-sm font-semibold">{day.short}</div>
+                    <div className="text-[11px] text-gray-500 font-normal">
+                      {format(weekDates[idx], "d MMM", { locale: undefined })}
                     </div>
-
-                    {/* Work Hours for Each Day */}
-                    <div className="flex gap-1 ml-4">
-                      {days.map((day) => (
-                        <div key={day.key} className="flex flex-col items-center gap-1 min-w-[60px]">
-                          <div className="text-xs font-medium text-gray-600">{day.short}</div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openProjectTimeModal(project.id, day.key)}
-                            className="w-12 h-6 text-xs border-gray-300 bg-white hover:bg-gray-50 px-1"
-                          >
-                            {formatProjectTimeDisplay(project, day.key).replace(/\s+/g, '')}
-                          </Button>
-                        </div>
-                      ))}
+                  </th>
+                ))}
+                <th className="w-32 min-w-[100px] py-3 px-2 sm:px-3 text-center text-sm font-medium text-gray-700 align-bottom">Template</th>
+                <th className="w-16 min-w-[64px] py-3 px-2 sm:px-3 text-center text-sm font-medium text-gray-700 align-bottom">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id} className="border-b border-gray-100">
+                  {/* Projet selection/creation */}
+                  <td className="py-2 px-2 sm:px-4 align-middle">
+                    <div className="flex items-center gap-2">
+                      <Select value={row.projectId || ""} onValueChange={val => handleSelectProject(row.id, val)}>
+                        <SelectTrigger className="w-full min-w-[120px]">
+                          <SelectValue placeholder="Sélectionner projet" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {createdProjects.map(proj => (
+                            <SelectItem key={proj.id} value={proj.id}>{proj.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button variant="ghost" size="icon" onClick={() => { setProjectModalOpen(true); setRowToEdit(row.id) }} className="h-8 w-8 p-0">
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </div>
-
-                    {/* Delete Button */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteProject(project.id)}
-                      className="ml-2 text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-                    >
+                    <div className="text-xs text-gray-500 truncate mt-1">
+                      {row.projectName || "Aucun projet sélectionné"}
+                    </div>
+                  </td>
+                  {/* Horaires par jour */}
+                  {days.map(day => (
+                    <td key={day.key} className="py-2 px-1 text-center align-middle">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openTimeModalForRow(row.id, day.key)}
+                        className="w-16 h-7 text-xs border-gray-300 bg-white hover:bg-gray-50 px-1"
+                      >
+                        {(row.workHours[day.key] || "0h 0m 0s").replace(/\s+/g, "")}
+                      </Button>
+                    </td>
+                  ))}
+                  {/* Template */}
+                  <td className="py-2 px-2 text-center align-middle">
+                    <Select value={row.template} onValueChange={val => handleSelectTemplate(row.id, val)}>
+                      <SelectTrigger className="w-full min-w-[80px]">
+                        <SelectValue placeholder="Template" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {templates.map(tpl => (
+                          <SelectItem key={tpl.id} value={tpl.id}>{tpl.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  {/* Actions */}
+                  <td className="py-2 px-2 text-center align-middle">
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteRow(row.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0">
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="h-64 flex items-center justify-center text-gray-400">
-                <div className="text-center">
-                  <FolderOpen className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                  <p className="text-sm">No projects created yet</p>
-                  <p className="text-xs mt-1">Create your first project to get started</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-        {/* Action Buttons */}
+                </td>
+              </tr>
+              ))}
+            </tbody>
+          </table>
+          {/* Bouton Add new row */}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-4 border-t border-gray-200">
-            <Button variant="outline" className="flex items-center gap-2 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3 bg-white border-gray-300">
+            <Button variant="outline" className="flex items-center gap-2 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3 bg-white border-gray-300" onClick={handleAddRow}>
               <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />
               <span className="hidden sm:inline">Add new row</span>
               <span className="sm:hidden">Add</span>
-          </Button>
-
-            <Button variant="outline" className="flex items-center gap-2 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3 bg-white border-gray-300">
-              <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Copy last week</span>
-              <span className="sm:hidden">Copy</span>
-          </Button>
-
-            <Button variant="outline" className="flex items-center gap-2 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3 bg-white border-gray-300">
-              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Save as template</span>
-              <span className="sm:hidden">Save</span>
-          </Button>
-        </div>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Time Modal */}
-      <Dialog open={isTimeModalOpen} onOpenChange={setIsTimeModalOpen}>
+      {/* Modal création projet depuis ligne */}
+      <Dialog open={projectModalOpen} onOpenChange={setProjectModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderOpen className="h-5 w-5" />
+              Créer un nouveau projet
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="project-name" className="text-sm font-medium">Nom du projet *</label>
+              <Input
+                id="project-name"
+                value={newProjectName}
+                onChange={e => setNewProjectName(e.target.value)}
+                placeholder="Entrer le nom du projet"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="project-client" className="text-sm font-medium">Client (optionnel)</label>
+              <Select value={newProjectClient} onValueChange={setNewProjectClient}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map(client => (
+                    <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="project-template" className="text-sm font-medium">Template (optionnel)</label>
+              <Select value={newProjectTemplate} onValueChange={setNewProjectTemplate}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map(template => (
+                    <SelectItem key={template.id} value={template.id}>{template.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setProjectModalOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={() => rowToEdit && handleCreateProjectFromRow(rowToEdit)} disabled={!newProjectName}>
+              Créer le projet
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal pour saisir les horaires */}
+      <Dialog open={timeModalOpen} onOpenChange={setTimeModalOpen}>
         <DialogContent className="sm:max-w-[300px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Set Work Hours - {days.find(d => d.key === selectedDay)?.label}
+              Saisir les horaires - {days.find(d => d.key === editingDay)?.label}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -439,7 +643,7 @@ export default function TimesheetPage() {
                 min="0"
                 max="23"
                 value={timeInput.hours}
-                onChange={(e) => setTimeInput(prev => ({ ...prev, hours: e.target.value }))}
+                onChange={e => setTimeInput(prev => ({ ...prev, hours: e.target.value }))}
                 className="w-16 h-8 text-xs text-center"
               />
               <span className="text-sm text-gray-500">h</span>
@@ -449,7 +653,7 @@ export default function TimesheetPage() {
                 min="0"
                 max="59"
                 value={timeInput.minutes}
-                onChange={(e) => setTimeInput(prev => ({ ...prev, minutes: e.target.value }))}
+                onChange={e => setTimeInput(prev => ({ ...prev, minutes: e.target.value }))}
                 className="w-16 h-8 text-xs text-center"
               />
               <span className="text-sm text-gray-500">m</span>
@@ -459,18 +663,18 @@ export default function TimesheetPage() {
                 min="0"
                 max="59"
                 value={timeInput.seconds}
-                onChange={(e) => setTimeInput(prev => ({ ...prev, seconds: e.target.value }))}
+                onChange={e => setTimeInput(prev => ({ ...prev, seconds: e.target.value }))}
                 className="w-16 h-8 text-xs text-center"
               />
               <span className="text-sm text-gray-500">s</span>
             </div>
           </div>
           <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setIsTimeModalOpen(false)}>
-              Cancel
+            <Button variant="outline" onClick={() => setTimeModalOpen(false)}>
+              Annuler
             </Button>
-            <Button onClick={selectedProject ? saveProjectTime : saveTime}>
-              Save
+            <Button onClick={saveTimeForRow}>
+              Enregistrer
             </Button>
           </div>
         </DialogContent>
