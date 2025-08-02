@@ -5,6 +5,17 @@ import { ChevronLeft, ChevronRight, Settings, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CalendarGrid from './components/calendar-grid';
 import WorkEntryModal from './components/workEntry-modal';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+
+
 
 // Projets simulés (à remplacer par un fetch si besoin)
 const projets = [

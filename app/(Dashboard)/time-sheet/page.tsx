@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, ChevronDown, Copy, Save, Download, Menu, Search, Star, ChevronUp, Edit, ChevronLeft, ChevronRight, X } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem, DropdownMenuLabel, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -14,6 +14,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Check } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { addDays, format, startOfWeek, endOfWeek, addWeeks, subWeeks } from "date-fns";
+import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu"
 
 const COLORS = [
   { name: "green", class: "bg-green-500" },
@@ -247,10 +248,62 @@ export default function TimesheetPage() {
           <h1 className="text-2xl font-semibold text-gray-800">Timesheet</h1>
 
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="hidden sm:flex items-center gap-2 bg-transparent">
-              Teammates
-              <ChevronDown className="w-4 h-4" />
-            </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Teammates
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="focus:bg-transparent">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search teammates..."
+                    className="w-full pl-10"
+                  />
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <div className="flex items-center justify-between px-2 py-1.5">
+                <span className="text-sm text-muted-foreground">Show</span>
+                <Select>
+                  <SelectTrigger className="h-8 w-[100px]">
+                    <SelectValue placeholder="Active" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">
+                      <div className="flex items-center">
+                        <div className="mr-2 h-2 w-2 rounded-full bg-green-500" />
+                        Active
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="inactive">
+                      <div className="flex items-center">
+                        <div className="mr-2 h-2 w-2 rounded-full bg-gray-500" />
+                        Inactive
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="email">
+                      <div className="flex items-center">
+                        <div className="mr-2 h-2 w-2 rounded-full bg-green-500" />
+                        maximedoaw204
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem disabled>
+                Activity Bar
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem>
+                Panel
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
             <div className="flex items-center">
               <Button 

@@ -5,6 +5,7 @@ import { ArrowRight, Star, Users } from "lucide-react"
 import { IconCarousel } from "./icon-carousel"
 import { defaultCarouselItems } from "@/constant"
 import { usePathname } from "next/navigation"
+import Link from "next/link"
 
 const companyLogos = [
   "Hewlett Packard Enterprise",
@@ -49,6 +50,7 @@ export function HeroSection({title="", subtitle=""} : {title: string, subtitle: 
 
           {/* CTA Button */}
           <div className="mt-10">
+            <Link href="/time-sheet">
             <Button
               size="lg"
               className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
@@ -56,6 +58,7 @@ export function HeroSection({title="", subtitle=""} : {title: string, subtitle: 
               START TRACKING TIME — {"IT'S FREE!"}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
+            </Link>
           </div>
           {pathname === "/" && <IconCarousel items={defaultCarouselItems} />}
           {/* Social Proof */}
