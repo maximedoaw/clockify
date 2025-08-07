@@ -46,7 +46,8 @@ import {
   addWeeks,
   subWeeks,
 } from 'date-fns'
-import { useToast } from '@/hooks/use-toast'
+import { TimesheetToastProvider, useTimesheetToast } from './toast-context'
+import { Toaster } from './toaster'
 
 // Static color mapping to avoid dynamic Tailwind classes
 const COLORS = [
@@ -143,11 +144,9 @@ type Template = {
   times?: Array<{ [day: string]: string }>
 }
 
-// A compact, scrollable day-of-week bar for mobile to prevent overflow.
-// Visible on mobile (lg:hidden) and mirrors the week header semantics.
+// A compact, scrollable day-of-week bar for mobile.
 function WeekDaysBar({ currentWeek }: { currentWeek: Date }) {
   const start = startOfWeek(currentWeek, WEEK_OPTS)
-  // Labels like Mo 05, Tu 06...
   const days = Array.from({ length: 7 }).map((_, i) => {
     const d = addDays(start, i)
     const wd = format(d, 'EEE') // Mon, Tue...
@@ -159,7 +158,6 @@ function WeekDaysBar({ currentWeek }: { currentWeek: Date }) {
     <div className="lg:hidden relative -mx-3 sm:-mx-4 px-3 sm:px-4">
       <div className="overflow-x-auto">
         <div className="flex gap-2 py-2">
-          {/* Leading static "Projects" chip for context */}
           <div className="shrink-0 rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-xs font-medium">
             {'Projects'}
           </div>
@@ -180,14 +178,13 @@ function WeekDaysBar({ currentWeek }: { currentWeek: Date }) {
   )
 }
 
-export default function TimesheetPage() {
-  const { toast } = useToast()
+function TimesheetPageInner() {
+  const { show } = useTimesheetToast()
 
   const [currentWeek, setCurrentWeek] = useState(new Date())
   const currentWeekKey = getWeekKey(currentWeek)
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false)
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
-  // Rows are global across weeks (projects/tasks selection persists)
   const [rows, setRows] = useState<RowType[]>([{ id: 1, type: 'project' }])
   const [selectedColor, setSelectedColor] = useState('green')
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
@@ -219,10 +216,10 @@ export default function TimesheetPage() {
 
   const rowTimes = timesByWeek[currentWeekKey] || {}
 
-  // Debounce timers per cell: key = `${rowId}:${day}`
+  // Debounce timers per cell
   const timersRef = useRef<Record<string, number>>({})
 
-  // Robust time parsing: HH:MM[:SS], 1.5h / 1,5h, 90m, 45s, combos "1h 30m 15s", decimals as hours
+  // Robust time parsing
   function parseTimeInput(input: string): number {
     let s = (input || '').trim().toLowerCase()
     if (!s) return 0
@@ -273,7 +270,6 @@ export default function TimesheetPage() {
   }
 
   const handleTimeInputChange = (rowId: number, day: string, value: string) => {
-    // Update raw input immediately for responsive totals preview
     setTimesByWeek((prev) => ({
       ...prev,
       [currentWeekKey]: {
@@ -285,7 +281,6 @@ export default function TimesheetPage() {
       },
     }))
 
-    // Debounced auto-normalization to prevent forcing format mid-typing
     scheduleNormalize(rowId, day, 600)
   }
 
@@ -370,6 +365,7 @@ export default function TimesheetPage() {
   const handleAddRow = () => {
     const nextId = rows.length ? Math.max(...rows.map((r) => r.id)) + 1 : 1
     setRows([...rows, { id: nextId, type: 'project' }])
+    show({ title: 'New row added', variant: 'success' })
   }
 
   const handleRemoveRow = (id: number) => {
@@ -385,6 +381,7 @@ export default function TimesheetPage() {
       })
       return copy
     })
+    show({ title: 'Row removed', variant: 'warning' })
   }
 
   const handleWeekSelect = (date: Date | undefined) => {
@@ -431,6 +428,7 @@ export default function TimesheetPage() {
     }
     setRows(updated as any)
     setMenuOpen(rowId, false)
+    show({ title: `Selected: ${project.name}`, variant: 'success' })
   }
 
   // Mobile: select project and close menu
@@ -444,6 +442,7 @@ export default function TimesheetPage() {
     }
     insertAboveTrailingEmpty(newRow)
     setIsDropdownOpen(false)
+    show({ title: `Selected: ${project.name}`, variant: 'success' })
   }
 
   // Tasks
@@ -469,6 +468,7 @@ export default function TimesheetPage() {
       insertAboveTrailingEmpty(newTaskRow)
       setTaskName('')
       setIsCreateTaskOpen(false)
+      show({ title: 'Task created', description: selectedProjectForTask || undefined, variant: 'success' })
     }
   }
 
@@ -519,7 +519,7 @@ export default function TimesheetPage() {
     setIsSaveTemplateOpen(false)
     setTemplateName('')
     setSaveTimeAlso(false)
-    toast({ title: 'Template enregistré', description: 'Votre template a été sauvegardé.' })
+    show({ title: 'Template saved', variant: 'success' })
   }
 
   const updateTemplate = () => {
@@ -533,14 +533,14 @@ export default function TimesheetPage() {
     )
     setEditingTemplateId(null)
     setEditingName('')
-    toast({ title: 'Template mis à jour' })
+    show({ title: 'Template mis à jour', variant: 'success' })
   }
 
   const deleteTemplate = (id: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce template ?')) {
       setTemplates((prev) => prev.filter((t) => t.id !== id))
       if (selectedTemplateId === id) setSelectedTemplateId(null)
-      toast({ title: 'Template supprimé' })
+      show({ title: 'Template supprimé', variant: 'warning' })
     }
   }
 
@@ -632,7 +632,7 @@ export default function TimesheetPage() {
     setIsApplyTemplateOpen(false)
     setJustApplied(true)
     window.setTimeout(() => setJustApplied(false), 2000)
-    toast({ title: 'Template appliqué' })
+    show({ title: 'Template applied', variant: 'success' })
   }
 
   // Copy last week -> current week
@@ -641,7 +641,11 @@ export default function TimesheetPage() {
     const prevKey = getWeekKey(prevWeek)
     const from = timesByWeek[prevKey]
     if (!from) {
-      toast({ title: 'Aucune donnée', description: 'Aucune donnée la semaine précédente.' })
+      show({
+        title: 'Aucune donnée',
+        description: 'Aucune donnée la semaine précédente.',
+        variant: 'warning',
+      })
       return
     }
     const cloned: { [rowId: number]: { [day: string]: string } } = {}
@@ -653,57 +657,11 @@ export default function TimesheetPage() {
       ...prev,
       [currentWeekKey]: cloned,
     }))
-    toast({ title: 'Copié', description: 'Horaires copiés depuis la semaine précédente.' })
-  }
-
-  // Mobile card per row (full edit)
-  function MobileRowCard({ row }: { row: RowType }) {
-    if (!row.name && row.type === 'project') return null
-    return (
-      <div className="rounded-lg border border-gray-200 bg-white p-3 sm:p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className={`h-4 w-4 rounded-full ${getBgClass(row.color)}`} />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-gray-800">
-                {row.type === 'task'
-                  ? `${row.projectName}: ${row.name}`
-                  : row.name}
-              </p>
-              <p className="text-xs text-gray-500">Total: {getRowTotal(row.id)}</p>
-            </div>
-          </div>
-          <button
-            onClick={() => handleRemoveRow(row.id)}
-            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Remove row"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-          {dayKeys.map((dKey) => (
-            <div key={dKey} className="flex flex-col">
-              <label className="text-xs font-medium text-gray-600">
-                {dayLabelMap[dKey]}
-              </label>
-              <input
-                type="text"
-                value={rowTimes[row.id]?.[dKey] || ''}
-                onChange={(e) =>
-                  handleTimeInputChange(row.id, dKey, e.target.value)
-                }
-                onKeyDown={(e) => handleTimeInputKeyDown(row.id, dKey, e)}
-                onBlur={() => normalizeTime(row.id, dKey)}
-                className="mt-1 w-full rounded-md border border-gray-200 bg-white px-2 py-2 text-sm text-gray-700 placeholder:text-gray-400"
-                placeholder="hh:mm[:ss], 1.5h, 90m"
-                title="Saisir les heures"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    )
+    show({
+      title: 'Copié',
+      description: 'Horaires copiés depuis la semaine précédente.',
+      variant: 'success',
+    })
   }
 
   return (
@@ -717,8 +675,8 @@ export default function TimesheetPage() {
 
           {/* Controls group */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
-            {/* Teammates: hide on very small screens if needed */}
-            <div className="hidden xs:block">
+            {/* Teammates */}
+            <div className="hidden sm:block">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-9">
@@ -791,7 +749,6 @@ export default function TimesheetPage() {
                     size="sm"
                     className="h-9 w-[150px] sm:w-48 justify-center text-left font-normal"
                   >
-                    {/* Short label on tiny screens to prevent overflow */}
                     <span className="sm:hidden">{formatWeekRangeShort(currentWeek)}</span>
                     <span className="hidden sm:inline">{formatWeekRangeLong(currentWeek)}</span>
                   </Button>
@@ -826,7 +783,7 @@ export default function TimesheetPage() {
           </div>
         </div>
 
-        {/* Mobile week days bar to avoid overflow and keep context */}
+        {/* Mobile week days bar */}
         <WeekDaysBar currentWeek={currentWeek} />
       </header>
 
@@ -851,13 +808,23 @@ export default function TimesheetPage() {
           </div>
         </div>
 
-        {/* Mobile-first: fully responsive cards */}
+        {/* Mobile cards */}
         <div className="space-y-3 lg:hidden">
-          {/* Existing rows as cards */}
           {rows
             .filter((row) => row.name || row.type === 'task')
             .map((row) => (
-              <MobileRowCard key={row.id} row={row} />
+              <MobileRowCard
+                key={row.id}
+                row={row}
+                rowTimes={rowTimes}
+                dayKeys={dayKeys}
+                dayLabelMap={dayLabelMap}
+                handleRemoveRow={handleRemoveRow}
+                handleTimeInputChange={handleTimeInputChange}
+                handleTimeInputKeyDown={handleTimeInputKeyDown}
+                normalizeTime={normalizeTime}
+                getRowTotal={getRowTotal}
+              />
             ))}
 
           {/* Project selector (mobile) */}
@@ -1119,7 +1086,13 @@ export default function TimesheetPage() {
                                 >
                                   {'Cancel'}
                                 </Button>
-                                <Button>{'CREATE'}</Button>
+                                <Button
+                                  onClick={() =>
+                                    show({ title: 'Project created', variant: 'success' })
+                                  }
+                                >
+                                  {'CREATE'}
+                                </Button>
                               </div>
                             </DialogContent>
                           </Dialog>
@@ -1442,5 +1415,82 @@ export default function TimesheetPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+// Extracted client-only MobileRowCard with explicit props
+function MobileRowCard({
+  row,
+  rowTimes,
+  dayKeys,
+  dayLabelMap,
+  handleRemoveRow,
+  handleTimeInputChange,
+  handleTimeInputKeyDown,
+  normalizeTime,
+  getRowTotal,
+}: {
+  row: RowType
+  rowTimes: Record<number, { [day: string]: string }>
+  dayKeys: ReadonlyArray<'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'>
+  dayLabelMap: Record<string, string>
+  handleRemoveRow: (id: number) => void
+  handleTimeInputChange: (rowId: number, day: string, value: string) => void
+  handleTimeInputKeyDown: (rowId: number, day: string, e: React.KeyboardEvent<HTMLInputElement>) => void
+  normalizeTime: (rowId: number, day: string) => void
+  getRowTotal: (rowId: number) => string
+}) {
+  if (!row.name && row.type === 'project') return null
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3 sm:p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className={`h-4 w-4 rounded-full ${getBgClass(row.color)}`} />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-gray-800">
+              {row.type === 'task'
+                ? `${row.projectName}: ${row.name}`
+                : row.name}
+            </p>
+            <p className="text-xs text-gray-500">Total: {getRowTotal(row.id)}</p>
+          </div>
+        </div>
+        <button
+          onClick={() => handleRemoveRow(row.id)}
+          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          aria-label="Remove row"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+        {dayKeys.map((dKey) => (
+          <div key={dKey} className="flex flex-col">
+            <label className="text-xs font-medium text-gray-600">
+              {dayLabelMap[dKey]}
+            </label>
+            <input
+              type="text"
+              value={rowTimes[row.id]?.[dKey] || ''}
+              onChange={(e) => handleTimeInputChange(row.id, dKey, e.target.value)}
+              onKeyDown={(e) => handleTimeInputKeyDown(row.id, dKey, e)}
+              onBlur={() => normalizeTime(row.id, dKey)}
+              className="mt-1 w-full rounded-md border border-gray-200 bg-white px-2 py-2 text-sm text-gray-700 placeholder:text-gray-400"
+              placeholder="hh:mm[:ss], 1.5h, 90m"
+              title="Saisir les heures"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function TimesheetPage() {
+  return (
+    <TimesheetToastProvider>
+      <TimesheetPageInner />
+      <Toaster position="bottom-right" />
+    </TimesheetToastProvider>
   )
 }
