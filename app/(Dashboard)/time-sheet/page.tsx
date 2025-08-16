@@ -665,7 +665,7 @@ function TimesheetPageInner() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 mt-15">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white px-3 py-3 sm:px-4">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
@@ -914,246 +914,233 @@ function TimesheetPageInner() {
 
         {/* Desktop grid */}
         <div className="hidden overflow-x-auto rounded-lg border border-gray-200 bg-white lg:block">
-          {rows.map((row) => (
-            <div className="relative grid w-full min-w-0 grid-cols-10" key={row.id}>
-              <div className="col-span-1 flex w-full items-center border-r border-gray-200 px-3 py-3">
-                {row.type === 'project' && !row.name ? (
-                  <DropdownMenu
-                    open={!!openMenus[row.id]}
-                    onOpenChange={(v) => setMenuOpen(row.id, v)}
-                  >
-                    <DropdownMenuTrigger asChild>
-                      <div className="flex w-full min-w-0 items-center">
-                        <span className="mr-2 flex h-5 w-5 items-center justify-center rounded-full border-2 border-blue-500 bg-white">
-                          <Plus className="h-4 w-4 text-blue-500" />
-                        </span>
-                        <span className="w-full break-words font-medium text-blue-600 hover:underline">
-                          {'Select Project'}
-                        </span>
-                      </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="z-50 w-80 p-0" align="start" sideOffset={5}>
-                      <div className="border-b p-4">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                          <Input
-                            placeholder="Search Project or Client"
-                            className="bg-gray-50 pl-10"
-                          />
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <div className="mb-4 flex items-center justify-between">
-                          <Accordion
-                            type="single"
-                            collapsible
-                            defaultValue="projects"
-                            className="flex-1"
-                          >
-                            <AccordionItem value="projects" className="border-0">
-                              <div className="flex items-center justify-between">
-                                <AccordionTrigger className="flex flex-shrink-0 items-center gap-2 p-0 text-sm font-medium text-gray-600 hover:underline">
-                                  <span>{'2 Projects'}</span>
-                                </AccordionTrigger>
-                                <button
-                                  type="button"
-                                  className="ml-2 rounded p-1 hover:bg-gray-100"
-                                  aria-label="Edit"
-                                >
-                                  <Edit className="h-4 w-4 text-gray-400" />
-                                </button>
-                              </div>
-                              <AccordionContent className="p-0">
-                                <div className="mt-3 space-y-3">
-                                  {projects.map((project) => (
-                                    <div
-                                      key={project.name}
-                                      className="flex items-center justify-between rounded p-2 hover:bg-gray-50"
-                                    >
-                                      <button
-                                        type="button"
-                                        onClick={() => handleSelectProjectForRow(row.id, project)}
-                                        className="flex items-center gap-3 text-left focus:outline-none"
-                                      >
-                                        <div
-                                          className={`h-3 w-3 rounded-full ${getBgClass(project.color)}`}
-                                        />
-                                        <span className="text-gray-700">{project.name}</span>
-                                      </button>
-                                      <div className="flex items-center gap-1">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="text-blue-500 hover:text-blue-600 hover:underline"
-                                          onClick={() => handleCreateTask(project.name, row.id)}
-                                        >
-                                          <span className="mr-1">{'Create Task'}</span>
-                                          <Star
-                                            className={
-                                              favorites[project.name]
-                                                ? 'h-4 w-4 text-yellow-400 fill-yellow-400'
-                                                : 'h-4 w-4 text-gray-400'
-                                            }
-                                            onClick={(e) => {
-                                              e.stopPropagation()
-                                              toggleFavorite(project.name)
-                                            }}
-                                            aria-pressed={!!favorites[project.name]}
-                                            aria-label="Toggle favorite"
-                                          />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          </Accordion>
-                        </div>
+        {rows.map((row) => (
+  <div className="relative grid w-full min-w-0 grid-cols-10 hover:bg-gray-50/50 transition-colors" key={row.id}>
+    <div className="col-span-1 flex w-full items-center border-r border-gray-200 px-4 py-3">
+      {row.type === 'project' && !row.name ? (
+        <DropdownMenu
+          open={!!openMenus[row.id]}
+          onOpenChange={(v) => setMenuOpen(row.id, v)}
+        >
+          <DropdownMenuTrigger asChild>
+            <div className="flex w-full items-center gap-3 cursor-pointer">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-blue-500 bg-white flex-shrink-0">
+                <Plus className="h-3 w-3 text-blue-500" />
+              </span>
+              <span className="text-sm font-medium text-blue-600 hover:underline whitespace-nowrap max-w-[100px] truncate" title='Select project'>
+                Select Project
+              </span>
 
-                        <div className="mt-6 border-t pt-4">
-                          <Dialog
-                            open={isCreateProjectOpen}
-                            onOpenChange={setIsCreateProjectOpen}
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="z-50 w-96 p-0" align="start" sideOffset={8}>
+            <div className="border-b p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Search Project or Client"
+                  className="bg-gray-50 pl-10 h-10 text-sm"
+                />
+              </div>
+            </div>
+            <div className="p-4">
+              <div className="mb-4">
+                <Accordion
+                  type="single"
+                  collapsible
+                  defaultValue="projects"
+                  className="flex-1"
+                >
+                  <AccordionItem value="projects" className="border-0">
+                    <div className="flex items-center justify-between mb-3">
+                      <AccordionTrigger className="flex items-center gap-2 p-0 text-sm font-medium text-gray-600 hover:underline">
+                        <span className="whitespace-nowrap">2 Projects</span>
+                      </AccordionTrigger>
+                      <button
+                        type="button"
+                        className="ml-2 rounded p-1.5 hover:bg-gray-100 transition-colors"
+                        aria-label="Edit"
+                      >
+                        <Edit className="h-4 w-4 text-gray-400" />
+                      </button>
+                    </div>
+                    <AccordionContent className="p-0">
+                      <div className="space-y-2">
+                        {projects.map((project) => (
+                          <div
+                            key={project.name}
+                            className="flex items-center justify-between rounded-md p-2.5 hover:bg-gray-50 transition-colors group"
                           >
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                className="w-full justify-start bg-blue-50/40 text-blue-600 hover:bg-blue-50"
-                                onClick={() => setMenuOpen(row.id, false)}
+                            <button
+                              type="button"
+                              onClick={() => handleSelectProjectForRow(row.id, project)}
+                              className="flex items-center gap-3 text-left focus:outline-none flex-1 min-w-0"
+                            >
+                              <div
+                                className={`h-3 w-3 rounded-full flex-shrink-0 ${getBgClass(project.color)}`}
+                              />
+                              <span className="text-sm text-gray-700 font-medium truncate">
+                                {project.name}
+                              </span>
+                            </button>
+                            <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                              <span className="text-xs text-gray-400 whitespace-nowrap">Create Task</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleFavorite(project.name)
+                                }}
+                                className="p-0.5 hover:bg-gray-100 rounded transition-colors"
                               >
-                                <Plus className="mr-2 h-4 w-4" />
-                                {'Create new Project'}
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-md">
-                              <DialogHeader>
-                                <DialogTitle className="font-normal text-gray-600">
-                                  {'Create new Project'}
-                                </DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4 py-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Input
-                                      placeholder="Enter Project name"
-                                      className="border-gray-200 bg-gray-50"
-                                    />
-                                  </div>
-                                  <div>
-                                    <Select>
-                                      <SelectTrigger className="border-gray-200 bg-gray-50">
-                                        <SelectValue placeholder="Select client" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="client1">{'Client 1'}</SelectItem>
-                                        <SelectItem value="client2">{'Client 2'}</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div className="flex items-center gap-3">
-                                    <ColorPicker value={selectedColor} onChange={setSelectedColor} />
-                                    <div className="flex items-center space-x-2">
-                                      <Checkbox
-                                        id="public"
-                                        defaultChecked
-                                        className="data-[state=checked]:border-blue-500 data-[state=checked]:bg-blue-500"
-                                      />
-                                      <Label htmlFor="public" className="font-medium text-blue-500">
-                                        {'Public'}
-                                      </Label>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <Select>
-                                      <SelectTrigger className="border-gray-200 bg-gray-50">
-                                        <SelectValue placeholder="No template" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="template1">{'Template 1'}</SelectItem>
-                                        <SelectItem value="template2">{'Template 2'}</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex justify-end gap-3 pt-4">
-                                <Button
-                                  variant="outline"
-                                  onClick={() => setIsCreateProjectOpen(false)}
-                                >
-                                  {'Cancel'}
-                                </Button>
-                                <Button
-                                  onClick={() =>
-                                    show({ title: 'Project created', variant: 'success' })
+                                <Star
+                                  className={
+                                    favorites[project.name]
+                                      ? 'h-4 w-4 text-yellow-400 fill-yellow-400'
+                                      : 'h-4 w-4 text-gray-300 hover:text-gray-400'
                                   }
-                                >
-                                  {'CREATE'}
-                                </Button>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
+                                />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <div className="flex w-full min-w-0 items-center">
-                    <div className={`mr-2 h-5 w-5 rounded-full ${getBgClass(row.color)}`} />
-                    <span className="w-full break-words font-medium text-gray-700">
-                      {row.type === 'task'
-                        ? `${row.projectName}: ${row.name}`
-                        : row.name}
-                    </span>
-                  </div>
-                )}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </div>
 
-              {weekDays.slice(1).map((day) => (
-                <div
-                  key={day.value}
-                  className={`col-span-1 flex w-full items-center justify-center border-r border-gray-200 px-3 py-3 last:border-r-0 ${
-                    day.value === 'total' ? 'bg-gray-50 font-semibold' : ''
-                  }`}
+              <div className="border-t pt-4">
+                <Dialog
+                  open={isCreateProjectOpen}
+                  onOpenChange={setIsCreateProjectOpen}
                 >
-                  {day.value !== 'total' ? (
-                    <input
-                      type="text"
-                      value={rowTimes[row.id]?.[day.value] || ''}
-                      onChange={(e) =>
-                        handleTimeInputChange(row.id, day.value, e.target.value)
-                      }
-                      onKeyDown={(e) => handleTimeInputKeyDown(row.id, day.value, e)}
-                      onBlur={() => normalizeTime(row.id, day.value)}
-                      className={`w-full rounded-lg border border-gray-200 bg-white py-2 text-center text-base text-gray-700 placeholder:text-gray-400 ${
-                        row.type === 'project' && !row.name
-                          ? 'cursor-not-allowed opacity-60'
-                          : ''
-                      }`}
-                      placeholder="hh:mm[:ss], 1.5h, 90m"
-                      title="Entrer les heures"
-                      readOnly={row.type === 'project' && !row.name}
-                    />
-                  ) : (
-                    <span className="w-full text-center font-semibold">
-                      {getRowTotal(row.id)}
-                    </span>
-                  )}
-                </div>
-              ))}
-
-              <button
-                onClick={() => handleRemoveRow(row.id)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                aria-label="Remove row"
-              >
-                <X className="h-4 w-4" />
-              </button>
+                  <DialogContent className="sm:max-w-lg">
+                    <DialogHeader className="pb-4">
+                      <DialogTitle className="font-normal text-gray-600 text-lg">
+                        Create new Project
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="grid grid-cols-2 gap-4">
+                        <Input
+                          placeholder="Enter Project name"
+                          className="border-gray-200 bg-gray-50 h-10"
+                        />
+                        <Select>
+                          <SelectTrigger className="border-gray-200 bg-gray-50 h-10">
+                            <SelectValue placeholder="Select client" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="client1">Client 1</SelectItem>
+                            <SelectItem value="client2">Client 2</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center gap-3">
+                          <ColorPicker value={selectedColor} onChange={setSelectedColor} />
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="public"
+                              defaultChecked
+                              className="data-[state=checked]:border-blue-500 data-[state=checked]:bg-blue-500"
+                            />
+                            <Label htmlFor="public" className="font-medium text-blue-500 text-sm whitespace-nowrap">
+                              Public
+                            </Label>
+                          </div>
+                        </div>
+                        <Select>
+                          <SelectTrigger className="border-gray-200 bg-gray-50 h-10">
+                            <SelectValue placeholder="No template" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="template1">Template 1</SelectItem>
+                            <SelectItem value="template2">Template 2</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4 border-t">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsCreateProjectOpen(false)}
+                        className="px-4"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          show({ title: 'Project created', variant: 'success' })
+                        }
+                        className="px-4"
+                      >
+                        CREATE
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
-          ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <div className="flex w-full items-center gap-3">
+          <div className={`h-3 w-3 rounded-full flex-shrink-0 ${getBgClass(row.color)}`} />
+          <span className="text-sm font-medium text-gray-700 truncate">
+            {row.type === 'task'
+              ? `${row.projectName}: ${row.name}`
+              : row.name}
+          </span>
+        </div>
+      )}
+    </div>
+
+    {weekDays.slice(1).map((day) => (
+      <div
+        key={day.value}
+        className={`col-span-1 flex w-full items-center justify-center border-r border-gray-200 px-2 py-3 last:border-r-0 ${
+          day.value === 'total' ? 'bg-gray-50 font-semibold' : ''
+        }`}
+      >
+        {day.value !== 'total' ? (
+          <input
+            type="text"
+            value={rowTimes[row.id]?.[day.value] || ''}
+            onChange={(e) =>
+              handleTimeInputChange(row.id, day.value, e.target.value)
+            }
+            onKeyDown={(e) => handleTimeInputKeyDown(row.id, day.value, e)}
+            onBlur={() => normalizeTime(row.id, day.value)}
+            className={`w-full rounded border border-gray-200 bg-white py-1.5 px-2 text-center text-sm text-gray-700 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none transition-colors ${
+              row.type === 'project' && !row.name
+                ? 'cursor-not-allowed opacity-60'
+                : 'hover:border-gray-300'
+            }`}
+            placeholder="0:00"
+            title="Entrer les heures"
+            readOnly={row.type === 'project' && !row.name}
+          />
+        ) : (
+          <span className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+            {getRowTotal(row.id)}
+          </span>
+        )}
+      </div>
+    ))}
+
+    {/* Croix de suppression parfaitement centrée */}
+    <div className="absolute right-0 top-0 h-full w-10 flex items-center justify-center">
+      <button
+        onClick={() => handleRemoveRow(row.id)}
+        className="flex items-center justify-center w-6 h-6 rounded text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all duration-200"
+        aria-label="Remove row"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  </div>
+))}
           <div className="grid w-full min-w-0 grid-cols-10">{' '}</div>
         </div>
 
@@ -1494,3 +1481,4 @@ export default function TimesheetPage() {
     </TimesheetToastProvider>
   )
 }
+
