@@ -88,7 +88,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 mt-16">
       {/* Calendar Header */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-4 mb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4 flex-wrap">

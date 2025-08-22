@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Timer, Calendar, BarChart2, Users, Tags, FolderKanban, ChevronsRight, ChevronsLeft, CalendarClock, LayoutDashboard } from "lucide-react"
+import { Timer, Calendar, BarChart2, Users, Tags, FolderKanban, ChevronsRight, ChevronsLeft, CalendarClock, LayoutDashboard, ChevronDown } from "lucide-react"
 import { useState } from "react"
 import {
   Sheet,
@@ -18,6 +18,17 @@ import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
+const reportsSubItems = [
+  { href: "#summary", label: "Summary" },
+  { href: "#detailed", label: "Detailed" },
+  { href: "#weekly", label: "Weekly" },
+  { href: "#shared", label: "Shared" },
+  { href: "#team", label: "Team" },
+  { href: "#attendance", label: "Attendance" },
+  { href: "#assignments", label: "Assignments" },
+  { href: "#expense", label: "Expense" },
+]
+
 const navigationItems = [
   {
     section: "Track",
@@ -31,7 +42,7 @@ const navigationItems = [
     section: "Analyze",
     items: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/reports/summary", label: "Reports", icon: BarChart2 },
+      { href: "/reports", label: "Reports", icon: BarChart2, hasDropdown: true },
     ],
   },
   {
@@ -49,6 +60,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [hoveredDropdown, setHoveredDropdown] = useState<string | null>(null)
 
   const isActive = (href: string) => {
     if (href === "/timesheet" && pathname === "/") return true
@@ -80,33 +92,97 @@ export function Sidebar() {
                     {section.items.map((item) => {
                       const Icon = item.icon
                       const active = isActive(item.href)
+                      const isReports = item.hasDropdown
 
                       return (
-                        <Tooltip key={item.href}>
-                          <TooltipTrigger asChild>
-                            <Button
-                              asChild
-                              variant={active ? "secondary" : "ghost"}
-                              className={`w-full justify-start gap-2 ${
-                                isCollapsed ? "justify-center px-2" : ""
-                              }`}
-                            >
-                              <Link href={item.href}>
-                                <Icon className="h-4 w-4" />
-                                {!isCollapsed && (
-                                  <span className="uppercase tracking-wide text-xs">
-                                    {item.label}
-                                  </span>
+                        <div 
+                          key={item.href} 
+                          className="relative"
+                          onMouseEnter={() => isReports && !isCollapsed && setHoveredDropdown(item.label)}
+                          onMouseLeave={() => isReports && setHoveredDropdown(null)}
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                asChild={!isReports}
+                                variant={active ? "secondary" : "ghost"}
+                                className={`w-full justify-start gap-2 ${
+                                  isCollapsed ? "justify-center px-2" : ""
+                                }`}
+                                onClick={isReports && isCollapsed ? () => setHoveredDropdown(hoveredDropdown === item.label ? null : item.label) : undefined}
+                              >
+                                {isReports ? (
+                                  <Link href={item.href} className="flex items-center gap-2 w-full">
+                                    <Icon className="h-4 w-4" />
+                                    {!isCollapsed && (
+                                      <>
+                                        <span className="uppercase tracking-wide text-xs flex-1 text-left">
+                                          {item.label}
+                                        </span>
+                                        <ChevronDown className={`h-3 w-3 transition-transform ${hoveredDropdown === item.label ? 'rotate-180' : ''}`} />
+                                      </>
+                                    )}
+                                  </Link>
+                                ) : (
+                                  <Link href={item.href}>
+                                    <Icon className="h-4 w-4" />
+                                    {!isCollapsed && (
+                                      <span className="uppercase tracking-wide text-xs">
+                                        {item.label}
+                                      </span>
+                                    )}
+                                  </Link>
                                 )}
-                              </Link>
-                            </Button>
-                          </TooltipTrigger>
-                          {isCollapsed && (
-                            <TooltipContent side="right" className="bg-gray-100 text-gray-400">
-                              <p>{item.label}</p>
-                            </TooltipContent>
+                              </Button>
+                            </TooltipTrigger>
+                            {isCollapsed && (
+                              <TooltipContent side="right" className="bg-gray-100 text-gray-400">
+                                <p>{item.label}</p>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+
+                          {/* Dropdown menu for Reports */}
+                          {isReports && (
+                            <>
+                              {/* Desktop dropdown */}
+                              {!isCollapsed && hoveredDropdown === item.label && (
+                                <div className="absolute left-0 top-full mt-1 w-full bg-background border rounded-md shadow-lg z-50">
+                                  <div className="py-1">
+                                    {reportsSubItems.map((subItem) => (
+                                      <Link
+                                        key={subItem.href}
+                                        href={subItem.href}
+                                        className="block px-4 py-2 text-xs uppercase tracking-wide text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                        onClick={() => setHoveredDropdown(null)}
+                                      >
+                                        {subItem.label}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Collapsed sidebar dropdown */}
+                              {isCollapsed && hoveredDropdown === item.label && (
+                                <div className="absolute left-full top-0 ml-2 w-48 bg-background border rounded-md shadow-lg z-50">
+                                  <div className="py-1">
+                                    {reportsSubItems.map((subItem) => (
+                                      <Link
+                                        key={subItem.href}
+                                        href={subItem.href}
+                                        className="block px-4 py-2 text-xs uppercase tracking-wide text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                        onClick={() => setHoveredDropdown(null)}
+                                      >
+                                        {subItem.label}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </>
                           )}
-                        </Tooltip>
+                        </div>
                       )
                     })}
                   </div>
@@ -170,22 +246,55 @@ export function Sidebar() {
                     {section.items.map((item) => {
                       const Icon = item.icon
                       const active = isActive(item.href)
+                      const isReports = item.hasDropdown
 
                       return (
-                        <SheetClose asChild key={item.href}>
-                          <Button
-                            asChild
-                            variant={active ? "secondary" : "ghost"}
-                            className="w-full justify-start gap-2"
-                          >
-                            <Link href={item.href}>
-                              <Icon className="h-4 w-4" />
-                              <span className="uppercase tracking-wide text-xs">
-                                {item.label}
-                              </span>
-                            </Link>
-                          </Button>
-                        </SheetClose>
+                        <div key={item.href}>
+                          <SheetClose asChild={!isReports}>
+                            <Button
+                              asChild={!isReports}
+                              variant={active ? "secondary" : "ghost"}
+                              className="w-full justify-start gap-2"
+                              onClick={isReports ? () => setHoveredDropdown(hoveredDropdown === item.label ? null : item.label) : undefined}
+                            >
+                              {isReports ? (
+                                <Link href={item.href} className="flex items-center gap-2 w-full">
+                                  <Icon className="h-4 w-4" />
+                                  <span className="uppercase tracking-wide text-xs flex-1 text-left">
+                                    {item.label}
+                                  </span>
+                                  <ChevronDown className={`h-3 w-3 transition-transform ${hoveredDropdown === item.label ? 'rotate-180' : ''}`} />
+                                </Link>
+                              ) : (
+                                <Link href={item.href}>
+                                  <Icon className="h-4 w-4" />
+                                  <span className="uppercase tracking-wide text-xs">
+                                    {item.label}
+                                  </span>
+                                </Link>
+                              )}
+                            </Button>
+                          </SheetClose>
+                          
+                          {/* Mobile dropdown */}
+                          {isReports && hoveredDropdown === item.label && (
+                            <div className="mt-1 ml-6 space-y-1">
+                              {reportsSubItems.map((subItem) => (
+                                <SheetClose asChild key={subItem.href}>
+                                  <Button
+                                    asChild
+                                    variant="ghost"
+                                    className="w-full justify-start text-xs"
+                                  >
+                                    <Link href={subItem.href} className="pl-4">
+                                      {subItem.label}
+                                    </Link>
+                                  </Button>
+                                </SheetClose>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       )
                     })}
                   </div>

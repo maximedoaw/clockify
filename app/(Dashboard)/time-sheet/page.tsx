@@ -894,21 +894,21 @@ function TimesheetPageInner() {
           </div>
 
           {/* Mobile totals */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50">
-            <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 md:grid-cols-4">
-              {dayKeys.map((d) => (
-                <div key={d} className="flex items-center justify-between">
-                  <span className="text-xs text-gray-600">{dayLabelMap[d]}</span>
-                  <span className="text-sm font-medium text-gray-800">
-                    {totals[d] || '00:00:00'}
-                  </span>
-                </div>
-              ))}
-              <div className="col-span-2 mt-1 flex items-center justify-between border-t border-blue-200 pt-2 sm:col-span-3 md:col-span-4">
-                <span className="text-sm font-semibold text-gray-800">{'Total'}</span>
-                <span className="text-base font-bold text-gray-900">{totals.total}</span>
-              </div>
-            </div>
+          <div className="rounded-lg border border-blue-200 bg-blue-50 overflow-x-auto">             
+            <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 md:grid-cols-4 min-w-max">               
+              {dayKeys.map((d) => (                 
+                <div key={d} className="flex items-center justify-between whitespace-nowrap">                   
+                  <span className="text-xs text-gray-600">{dayLabelMap[d]}</span>                   
+                  <span className="text-sm font-medium text-gray-800">                     
+                    {totals[d] || '00:00:00'}                   
+                  </span>                 
+                </div>               
+              ))}               
+              <div className="col-span-2 mt-1 flex items-center justify-between border-t border-blue-200 pt-2 sm:col-span-3 md:col-span-4 whitespace-nowrap">                 
+                <span className="text-sm font-semibold text-gray-800">{'Total'}</span>                 
+                <span className="text-base font-bold text-gray-900">{totals.total}</span>               
+              </div>             
+            </div>           
           </div>
         </div>
 
