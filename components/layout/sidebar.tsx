@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Timer, Calendar, BarChart2, Users, Tags, FolderKanban, ChevronsRight, ChevronsLeft, CalendarClock, LayoutDashboard, ChevronDown } from "lucide-react"
+import { Timer, Calendar, BarChart2, Users, Tags, FolderKanban, ChevronsRight, ChevronsLeft, CalendarClock, LayoutDashboard, ChevronDown, ChevronUp, CheckCircle, Clock, Activity, Eye, EyeOff, ChartNoAxesCombined, CalendarCheck2 } from "lucide-react"
 import { useState } from "react"
 import {
   Sheet,
@@ -27,6 +27,27 @@ const reportsSubItems = [
   { href: "#attendance", label: "Attendance" },
   { href: "#assignments", label: "Assignments" },
   { href: "#expense", label: "Expense" },
+]
+
+const additionalSections = [
+  {
+    section: "APPROVALS",
+    icon: CalendarCheck2,
+    href: "/approvals",
+    description: "Manage approval requests"
+  },
+  {
+    section: "TIME-OFF", 
+    icon: Clock,
+    href: "/time-off",
+    description: "Time off requests and balance"
+  },
+  {
+    section: "ACTIVITY",
+    icon: ChartNoAxesCombined,
+    href: "/activity",
+    description: "Team activity and tracking"
+  }
 ]
 
 const navigationItems = [
@@ -61,6 +82,7 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [hoveredDropdown, setHoveredDropdown] = useState<string | null>(null)
+  const [showAdditionalSections, setShowAdditionalSections] = useState(false)
 
   const isActive = (href: string) => {
     if (href === "/timesheet" && pathname === "/") return true
@@ -188,6 +210,81 @@ export function Sidebar() {
                   </div>
                 </div>
               ))}
+
+              {/* Additional Sections Dropdown */}
+              <div className="pt-4">
+                <Separator className="mb-4" />
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-2 ${isCollapsed ? "justify-center px-2" : ""}`}
+                    onClick={() => setShowAdditionalSections(!showAdditionalSections)}
+                  >
+                    {!isCollapsed && (
+                      <span className="uppercase tracking-wide text-xs text-muted-foreground/70">
+                        {showAdditionalSections ? "SHOW LESS" : "SHOW MORE"}
+                      </span>
+                    )}
+                    {!isCollapsed && (
+                      <ChevronDown className={`h-3 w-3 transition-transform ${showAdditionalSections ? 'rotate-180' : ''}`} />
+                    )}
+                  </Button>
+
+                  {showAdditionalSections && !isCollapsed && (
+                    <div className="ml-4 space-y-1 border-l-2 border-muted pl-3">
+                      {additionalSections.map((item) => {
+                        const Icon = item.icon
+                        const active = isActive(item.href)
+                        return (
+                          <Tooltip key={item.section}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                asChild
+                                variant={active ? "secondary" : "ghost"}
+                                className="w-full justify-start gap-2 opacity-80 hover:opacity-100 transition-opacity"
+                              >
+                                <Link href={item.href}>
+                                  <Icon className="h-4 w-4" />
+                                  <span className="uppercase tracking-wide text-xs">
+                                    {item.section}
+                                  </span>
+                                </Link>
+                              </Button>
+                            </TooltipTrigger>
+                            {isCollapsed && (
+                              <TooltipContent side="right" className="bg-gray-100 text-gray-400">
+                                <p>{item.section}</p>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Collapsed sidebar additional sections */}
+                  {isCollapsed && showAdditionalSections && (
+                    <div className="absolute left-full top-0 ml-2 w-48 bg-background border rounded-md shadow-lg z-50">
+                      <div className="py-1">
+                        {additionalSections.map((item) => {
+                          const Icon = item.icon
+                          return (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              className="flex items-center gap-2 px-4 py-2 text-xs uppercase tracking-wide text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                              onClick={() => setHoveredDropdown(null)}
+                            >
+                              <Icon className="h-4 w-4" />
+                              {item.section}
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </ScrollArea>
           
@@ -300,6 +397,51 @@ export function Sidebar() {
                   </div>
                 </div>
               ))}
+
+              {/* Additional Sections for Mobile */}
+              <div className="px-3 py-2">
+                <Separator className="my-4" />
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2 text-muted-foreground/70"
+                  onClick={() => setShowAdditionalSections(!showAdditionalSections)}
+                >
+                  {showAdditionalSections ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                  <span className="uppercase tracking-wide text-xs">
+                    {showAdditionalSections ? "SHOW LESS" : "SHOW MORE"}
+                  </span>
+                  <ChevronDown className={`h-3 w-3 transition-transform ${showAdditionalSections ? 'rotate-180' : ''}`} />
+                </Button>
+
+                {showAdditionalSections && (
+                  <div className="mt-2 ml-4 space-y-1 border-l-2 border-muted pl-3">
+                    {additionalSections.map((item) => {
+                      const Icon = item.icon
+                      const active = isActive(item.href)
+                      return (
+                        <SheetClose key={item.section} asChild>
+                          <Button
+                            asChild
+                            variant={active ? "secondary" : "ghost"}
+                            className="w-full justify-start gap-2 opacity-80 hover:opacity-100 transition-opacity text-xs"
+                          >
+                            <Link href={item.href}>
+                              <Icon className="h-4 w-4" />
+                              <span className="uppercase tracking-wide">
+                                {item.section}
+                              </span>
+                            </Link>
+                          </Button>
+                        </SheetClose>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </ScrollArea>
         </SheetContent>

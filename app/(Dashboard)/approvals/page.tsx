@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-const TimeOffPage = () => {
+const ApprovalsPage = () => {
   return (
     <div className="px-2 sm:px-4 mt-17 md:px-6 lg:px-10">
       {/* Bandeau Pro Feature */}
@@ -18,34 +18,34 @@ const TimeOffPage = () => {
       <div className="bg-white w-full mt-6 rounded-md shadow-sm p-4 md:p-6 lg:p-8">
         {/* Partie activité + GPS */}
         <div className="mb-8">
-          <h3 className="text-sm md:text-md font-medium text-gray-600 mb-3">TIME OFF</h3>
+          <h3 className="text-sm md:text-md font-medium text-gray-600 mb-3">Approval</h3>
           <h1 className="text-base md:text-lg font-semibold text-gray-800 mb-2">
-            Manage leaves & holidays
+            Formally approve timesheets
           </h1>
 
           <ul className="space-y-3 text-sm text-gray-600">
             <li className="flex items-start">
               <div className="w-2 h-2 bg-black rounded-full mt-1.5 mr-3"></div>
-              <span>Create holidays and time off policies</span>
+              <span>Submit timesheets for approval</span>
             </li>
             <li className="flex items-start">
               <div className="w-2 h-2 bg-black rounded-full mt-1.5 mr-3"></div>
-              <span>Request leave and time off</span>
+              <span>Remind people to submit timesheets</span>
             </li>
             <li className="flex items-start">
               <div className="w-2 h-2 bg-black rounded-full mt-1.5 mr-3"></div>
-              <span>See who has time off on a timeline</span>
+              <span>Allow managers to approve (or reject) timesheets</span>
             </li>
             <li className="flex items-start">
               <div className="w-2 h-2 bg-black rounded-full mt-1.5 mr-3"></div>
-              <span>See accrued, used, and available balance</span>
+              <span>Prevent changes to approved timesheets</span>
             </li>
           </ul>
 
           <div className="mt-4">
             <Link href={"#"}>
               <h2 className="text-base md:text-lg font-semibold text-blue-500 hover:underline">
-                How time off works
+                How approval works
               </h2>
             </Link>
           </div>
@@ -57,7 +57,7 @@ const TimeOffPage = () => {
             width={700}
             height={700}
             alt="activity-image"
-            src="/img24.png"
+            src="/img25.png"
             className="w-full max-w-3xl h-auto rounded-md"
           />
         </div>
@@ -66,4 +66,4 @@ const TimeOffPage = () => {
   );
 };
 
-export default TimeOffPage;
+export default ApprovalsPage;
