@@ -16,15 +16,33 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { X } from "lucide-react";
+import { CalendarIcon, ChevronLeft, ChevronRight, MoreVertical, Search, X } from "lucide-react";
 import React, { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
 
-type ModalType = "approve" | "remind" | null;
+type ModalType = "approve" | "remind" | "submit" | null;
 type TabType = "pending" | "unsubmitted" | "archive";
 
 const ApprovalsPage = () => {
   const [modalType, setModalType] = useState<ModalType>(null);
   const [activeTab, setActiveTab] = useState<TabType>("pending");
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [selectedUserForSubmit, setSelectedUserForSubmit] = useState<string | null>(null);
+
+  const allUsers = [
+    "[SAMPLE] Amy Smith",
+    "[SAMPLE] James Anderson", 
+    "[SAMPLE] Lara Peterson",
+    "[SAMPLE] Mike Johnson",
+    "maximedoaw204",
+    "tchekamboudanyls"
+  ];
 
   const handleApproveAll = () => {
     setModalType("approve");
@@ -36,6 +54,7 @@ const ApprovalsPage = () => {
 
   const handleCloseModal = () => {
     setModalType(null);
+    setSelectedUserForSubmit(null);
   };
 
   const handleConfirmApprove = () => {
@@ -48,13 +67,155 @@ const ApprovalsPage = () => {
     setModalType(null);
   };
 
+  const handleSubmitTime = (user: string) => {
+    setSelectedUserForSubmit(user);
+    setModalType("submit");
+  };
+
+  const handleConfirmSubmit = () => {
+    console.log(`Submitting time for ${selectedUserForSubmit}...`);
+    setModalType(null);
+    setSelectedUserForSubmit(null);
+  };
+
+  const handleUserSelect = (user: string) => {
+    setSelectedUsers(prev => 
+      prev.includes(user) 
+        ? prev.filter(u => u !== user)
+        : [...prev, user]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedUsers([]);
+    } else {
+      setSelectedUsers([...allUsers]);
+    }
+    setSelectAll(!selectAll);
+  };
+
   const getTabContent = () => {
     switch (activeTab) {
       case "pending":
         return (
           <div className="space-y-6">
             {/* Week 1 */}
-            <div className="border border-gray-200 rounded-sm">
+            <div className="border-none rounded-sm">
+              {/* Filters + Actions */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex space-x-3">
+                  <Select>
+                    <SelectTrigger className="w-[150px] h-9 text-sm border border-gray-300">
+                      <SelectValue placeholder="Sort by: Date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date" className="text-sm">Sort by: Date</SelectItem>
+                      <SelectItem value="name" className="text-sm">Sort by: Name</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select>
+                    <SelectTrigger className="w-[120px] h-9 text-sm border border-gray-300">
+                      <SelectValue placeholder="Team" />
+                    </SelectTrigger>
+                    <SelectContent className="w-[280px] p-0" align="start">
+                      {/* En-tête avec recherche */}
+                      <div className="p-3 border-b border-gray-200">
+                        <div className="relative">
+                          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Search users or groups"
+                            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Filtre SHOW */}
+                      <div className="p-3 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-700">SHOW</span>
+                          <Select defaultValue="active">
+                            <SelectTrigger className="h-7 w-[100px] text-xs border-gray-300">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="inactive">Inactive</SelectItem>
+                              <SelectItem value="all">All</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Section USERS */}
+                      <div className="p-3">
+                        {/* Case à cocher Select all */}
+                        <div className="flex items-center space-x-2 mb-3">
+                          <Checkbox 
+                            id="select-all-pending" 
+                            checked={selectAll}
+                            onCheckedChange={handleSelectAll}
+                            className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                          />
+                          <label
+                            htmlFor="select-all-pending"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Select all
+                          </label>
+                        </div>
+
+                        {/* Titre USERS */}
+                        <div className="mb-2">
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                            USERS
+                          </span>
+                        </div>
+
+                        {/* Liste des utilisateurs */}
+                        <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                          {allUsers.map((user, index) => (
+                            <div key={index} className="flex items-center space-x-2 py-1">
+                              <Checkbox 
+                                id={`user-pending-${index}`}
+                                checked={selectedUsers.includes(user)}
+                                onCheckedChange={() => handleUserSelect(user)}
+                                className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                              />
+                              <label
+                                htmlFor={`user-pending-${index}`}
+                                className="text-sm text-gray-700 flex-1"
+                              >
+                                {user}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex space-x-3">
+                  {/* Bouton REMIND TO APPROVE */}
+                  <button
+                    onClick={handleRemindToApprove}
+                    className="h-9 px-5 text-sm cursor-pointer font-medium border border-blue-500 text-blue-500 bg-white hover:bg-blue-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-1 flex items-center justify-center"
+                  >
+                    REMIND TO APPROVE
+                  </button>
+
+                  {/* Bouton APPROVE ALL */}
+                  <button
+                    onClick={handleApproveAll}
+                    className="h-9 px-5 text-sm cursor-pointer font-medium bg-blue-500 hover:bg-blue-600 text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-1 flex items-center justify-center"
+                  >
+                    APPROVE ALL
+                  </button>
+                </div>
+              </div>
               <div className="bg-gray-100 text-sm px-5 py-3 font-medium">
                 Sep 22, 2025 - Sep 28, 2025
               </div>
@@ -92,50 +253,307 @@ const ApprovalsPage = () => {
             </div>
           </div>
         );
-      case "unsubmitted":
-        return (
-          <div className="space-y-6">
-            <div className="border border-gray-200 rounded-sm">
-              <div className="bg-gray-100 text-sm px-5 py-3 font-medium">
-                Unsubmitted Timesheets
+        case "unsubmitted":
+          return (
+            <div className="w-full bg-white border border-gray-200 rounded-sm">
+              {/* Top controls */}
+              <div className="flex justify-between items-center p-4 border-b border-gray-200">
+                <div className="flex items-center space-x-3">
+                  {/* Calendar avec chevrons */}
+                  <div className="flex items-center space-x-0">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          className={cn(
+                            "h-9 w-[140px] flex items-center justify-start text-left font-normal text-sm border border-r-0 rounded-none px-3"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          This week
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={date}
+                          onSelect={setDate}
+                          initialFocus
+                          className="[&_.rdp-day]:rounded-none"
+                        />
+                      </PopoverContent>
+                    </Popover>
+        
+                    {/* Chevron buttons */}
+                    <div className="flex ml-1">
+                      <button className="h-9 w-8 border border-l-0 flex items-center justify-center rounded-none">
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button className="h-9 w-8 border border-l-0 flex items-center justify-center rounded-none">
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Team Select */}
+                  <Select>
+                    <SelectTrigger className="w-[120px] h-9 text-sm border border-gray-300">
+                      <SelectValue placeholder="Team" />
+                    </SelectTrigger>
+                    <SelectContent className="w-[280px] p-0" align="start">
+                      {/* En-tête avec recherche */}
+                      <div className="p-3 border-b border-gray-200">
+                        <div className="relative">
+                          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Search users or groups"
+                            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Filtre SHOW */}
+                      <div className="p-3 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-700">SHOW</span>
+                          <Select defaultValue="active">
+                            <SelectTrigger className="h-7 w-[100px] text-xs border-gray-300">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="inactive">Inactive</SelectItem>
+                              <SelectItem value="all">All</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Section USERS */}
+                      <div className="p-3">
+                        {/* Case à cocher Select all */}
+                        <div className="flex items-center space-x-2 mb-3">
+                          <Checkbox 
+                            id="select-all-pending" 
+                            checked={selectAll}
+                            onCheckedChange={handleSelectAll}
+                            className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                          />
+                          <label
+                            htmlFor="select-all-pending"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Select all
+                          </label>
+                        </div>
+
+                        {/* Titre USERS */}
+                        <div className="mb-2">
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                            USERS
+                          </span>
+                        </div>
+
+                        {/* Liste des utilisateurs */}
+                        <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                          {allUsers.map((user, index) => (
+                            <div key={index} className="flex items-center space-x-2 py-1">
+                              <Checkbox 
+                                id={`user-pending-${index}`}
+                                checked={selectedUsers.includes(user)}
+                                onCheckedChange={() => handleUserSelect(user)}
+                                className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                              />
+                              <label
+                                htmlFor={`user-pending-${index}`}
+                                className="text-sm text-gray-700 flex-1"
+                              >
+                                {user}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </SelectContent>
+                  </Select>
+                </div>
+        
+                {/* REMIND TO SUBMIT Button */}
+                <button className="h-9 px-4 text-sm font-medium border border-blue-500 text-blue-500 bg-white hover:bg-blue-50 transition-colors">
+                  REMIND TO SUBMIT
+                </button>
               </div>
-              <div className="grid grid-cols-4 text-xs uppercase text-gray-400 px-5 py-3 border-b border-gray-200">
-                <div>User</div>
-                <div className="text-right">Team Manager</div>
-                <div className="text-right">Status</div>
-                <div className="text-right">Last Activity</div>
+        
+              {/* Date Header */}
+              <div className="bg-gray-100 text-sm font-medium px-4 py-3 border-b border-gray-200">
+                Sep 29, 2025 - Oct 5, 2025
               </div>
-              <div className="grid grid-cols-4 px-5 py-3 text-sm border-t border-gray-200">
-                <div>[SAMPLE] John Doe</div>
-                <div className="text-right">[SAMPLE] James Anderson</div>
-                <div className="text-right">Not Submitted</div>
-                <div className="text-right">2 days ago</div>
+        
+              {/* Table Header */}
+              <div className="grid grid-cols-[1fr_auto_auto_40px] gap-4 px-4 py-3 border-b border-gray-200">
+                <div className="text-xs uppercase text-gray-500 font-medium">USER</div>
+                <div className="text-xs uppercase text-gray-500 font-medium text-right pr-4">TIME</div>
+                <div className="text-xs uppercase text-gray-500 font-medium text-right">TIME OFF</div>
+                <div></div>
+              </div>
+        
+              {/* Table Rows */}
+              <div className="divide-y divide-gray-200">
+                {[
+                  { name: "[SAMPLE] Mike Johnson", time: "16:00:00", off: "0,00h" },
+                  { name: "[SAMPLE] James Anderson", time: "17:00:00", off: "0,00h" },
+                  { name: "[SAMPLE] Lara Peterson", time: "21:00:00", off: "0,00h" },
+                  { name: "[SAMPLE] Amy Smith", time: "19:00:00", off: "16,00h" },
+                ].map((row, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-[1fr_auto_auto_40px] gap-4 px-4 py-3 items-center hover:bg-gray-50"
+                  >
+                    <div className="text-sm text-gray-900">{row.name}</div>
+                    <div className="text-sm text-gray-900 text-right pr-4">{row.time}</div>
+                    <div className="text-sm text-gray-900 text-right">{row.off}</div>
+                    <div className="flex justify-center">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button className="h-8 w-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-32 p-0" align="end">
+                          <button
+                            onClick={() => handleSubmitTime(row.name)}
+                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            SUBMIT
+                          </button>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                ))}
+              </div>
+        
+              {/* Footer */}
+              <div className="flex justify-center py-4 border-t border-gray-200">
+                <button className="text-sm text-blue-500 hover:text-blue-600 font-medium">
+                  Show users without time and expenses
+                </button>
               </div>
             </div>
-          </div>
-        );
-      case "archive":
-        return (
-          <div className="space-y-6">
-            <div className="border border-gray-200 rounded-sm">
-              <div className="bg-gray-100 text-sm px-5 py-3 font-medium">
-                Archived Timesheets
+          );
+          case "archive":
+            return (
+              <div className="space-y-6">
+                {/* Filtres */}
+                <div className="flex items-center space-x-3">
+                  <Select>
+                    <SelectTrigger className="w-[150px] h-9 text-sm border border-gray-300">
+                      <SelectValue placeholder="Sort by: Date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date" className="text-sm">Sort by: Date</SelectItem>
+                      <SelectItem value="name" className="text-sm">Sort by: Name</SelectItem>
+                    </SelectContent>
+                  </Select>
+          
+                  <Select>
+                    <SelectTrigger className="w-[100px] h-9 text-sm border border-gray-300">
+                      <SelectValue placeholder="Team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="team1" className="text-sm">Team 1</SelectItem>
+                      <SelectItem value="team2" className="text-sm">Team 2</SelectItem>
+                    </SelectContent>
+                  </Select>
+          
+                  <Select>
+                    <SelectTrigger className="w-[120px] h-9 text-sm border border-gray-300">
+                      <SelectValue placeholder="Show all" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" className="text-sm">Show all</SelectItem>
+                      <SelectItem value="approved" className="text-sm">Approved</SelectItem>
+                      <SelectItem value="withdrawn" className="text-sm">Withdrawn</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+          
+                {/* Première période - Aug 18, 2025 */}
+                <div className="border border-gray-200 rounded-sm">
+                  <div className="bg-gray-100 text-sm px-4 py-3 font-medium">
+                    Aug 18, 2025 - Aug 24, 2025
+                  </div>
+                  
+                  {/* En-têtes de colonnes */}
+                  <div className="grid grid-cols-[1fr_120px_120px] px-4 py-3 border-b border-gray-200">
+                    <div className="text-xs uppercase text-gray-500 font-medium">USER</div>
+                    <div className="text-xs uppercase text-gray-500 font-medium text-right">TIME</div>
+                    <div className="text-xs uppercase text-gray-500 font-medium text-right">STATUS</div>
+                  </div>
+                  
+                  {/* Ligne de données */}
+                  <div className="grid grid-cols-[1fr_120px_120px] px-4 py-3 border-b border-gray-200 hover:bg-gray-50">
+                    <div className="text-sm text-gray-900">[SAMPLE] Lara Peterson</div>
+                    <div className="text-sm text-gray-900 text-right">12:00:00</div>
+                    <div className="text-right">
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                        Approved
+                      </span>
+                    </div>
+                  </div>
+                </div>
+          
+                {/* Deuxième période - Jun 23, 2025 */}
+                <div className="border border-gray-200 rounded-sm">
+                  <div className="bg-gray-100 text-sm px-4 py-3 font-medium">
+                    Jun 23, 2025 - Jun 29, 2025
+                  </div>
+                  
+                  {/* En-têtes de colonnes */}
+                  <div className="grid grid-cols-[1fr_120px_120px] px-4 py-3 border-b border-gray-200">
+                    <div className="text-xs uppercase text-gray-500 font-medium">USER</div>
+                    <div className="text-xs uppercase text-gray-500 font-medium text-right">TIME</div>
+                    <div className="text-xs uppercase text-gray-500 font-medium text-right">STATUS</div>
+                  </div>
+                  
+                  {/* Ligne de données */}
+                  <div className="grid grid-cols-[1fr_120px_120px] px-4 py-3 border-b border-gray-200 hover:bg-gray-50">
+                    <div className="text-sm text-gray-900">[SAMPLE] Amy Smith</div>
+                    <div className="text-sm text-gray-900 text-right">12:00:00</div>
+                    <div className="text-right">
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                        Withdrawn
+                      </span>
+                    </div>
+                  </div>
+                </div>
+          
+                {/* Troisième période - Jun 16, 2025 */}
+                <div className="border border-gray-200 rounded-sm">
+                  <div className="bg-gray-100 text-sm px-4 py-3 font-medium">
+                    Jun 16, 2025 - Jun 22, 2025
+                  </div>
+                  
+                  {/* En-têtes de colonnes */}
+                  <div className="grid grid-cols-[1fr_120px_120px] px-4 py-3 border-b border-gray-200">
+                    <div className="text-xs uppercase text-gray-500 font-medium">USER</div>
+                    <div className="text-xs uppercase text-gray-500 font-medium text-right">TIME</div>
+                    <div className="text-xs uppercase text-gray-500 font-medium text-right">STATUS</div>
+                  </div>
+                  
+                  {/* Ligne de données */}
+                  <div className="grid grid-cols-[1fr_120px_120px] px-4 py-3 border-b border-gray-200 hover:bg-gray-50">
+                    <div className="text-sm text-gray-900">[SAMPLE] Amy Smith</div>
+                    <div className="text-sm text-gray-900 text-right">11:00:00</div>
+                    <div className="text-right">
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                        Approved
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="grid grid-cols-4 text-xs uppercase text-gray-400 px-5 py-3 border-b border-gray-200">
-                <div>User</div>
-                <div className="text-right">Team Manager</div>
-                <div className="text-right">Time</div>
-                <div className="text-right">Date Approved</div>
-              </div>
-              <div className="grid grid-cols-4 px-5 py-3 text-sm border-t border-gray-200">
-                <div>[SAMPLE] Jane Wilson</div>
-                <div className="text-right">[SAMPLE] James Anderson</div>
-                <div className="text-right">40:00:00</div>
-                <div className="text-right">Jan 15, 2025</div>
-              </div>
-            </div>
-          </div>
-        );
+            );
       default:
         return null;
     }
@@ -184,57 +602,14 @@ const ApprovalsPage = () => {
 
           {/* Content */}
           <div className="p-5 bg-white text-gray-700 border-t-0">
-            {/* Filters + Actions */}
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex space-x-3">
-                <Select>
-                  <SelectTrigger className="w-[150px] h-9 text-sm border border-gray-300">
-                    <SelectValue placeholder="Sort by: Date" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="date" className="text-sm">Sort by: Date</SelectItem>
-                    <SelectItem value="name" className="text-sm">Sort by: Name</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select>
-                  <SelectTrigger className="w-[120px] h-9 text-sm border border-gray-300">
-                    <SelectValue placeholder="Team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="team1" className="text-sm">Team 1</SelectItem>
-                    <SelectItem value="team2" className="text-sm">Team 2</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex space-x-3">
-                {/* Bouton REMIND TO APPROVE */}
-                <button
-                  onClick={handleRemindToApprove}
-                  className="h-9 px-5 text-sm cursor-pointer font-medium border border-blue-500 text-blue-500 bg-white hover:bg-blue-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-1 flex items-center justify-center"
-                >
-                  REMIND TO APPROVE
-                </button>
-
-                {/* Bouton APPROVE ALL */}
-                <button
-                  onClick={handleApproveAll}
-                  className="h-9 px-5 text-sm cursor-pointer font-medium bg-blue-500 hover:bg-blue-600 text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-1 flex items-center justify-center"
-                >
-                  APPROVE ALL
-                </button>
-              </div>
-            </div>
-
             {/* Dynamic Content based on active tab */}
             {getTabContent()}
           </div>
         </div>
       </div>
 
-      {/* Modal avec Dialog shadcn/ui */}
-      <Dialog open={modalType !== null} onOpenChange={handleCloseModal}>
+      {/* Modal pour Approve/Remind */}
+      <Dialog open={modalType !== null && modalType !== "submit"} onOpenChange={handleCloseModal}>
         <DialogContent className="sm:max-w-[500px] p-0 gap-0 border-none shadow-lg">
           {/* Header personnalisé */}
           <DialogHeader className="px-6 py-5 border-b border-gray-200 space-y-0">
@@ -269,6 +644,43 @@ const ApprovalsPage = () => {
               className="px-6 py-2 text-sm font-semibold bg-[#00a8e1] hover:bg-[#0096ca] text-white transition-colors tracking-wide"
             >
               {modalType === "approve" ? "APPROVE ALL" : "SEND"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal pour Submit */}
+      <Dialog open={modalType === "submit"} onOpenChange={handleCloseModal}>
+        <DialogContent className="sm:max-w-[500px] p-0 gap-0 border-none shadow-lg">
+          {/* Header personnalisé */}
+          <DialogHeader className="px-6 py-5 border-b border-gray-200 space-y-0">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl font-normal text-gray-700">
+                Submit for approval
+              </DialogTitle>
+            </div>
+          </DialogHeader>
+
+          {/* Content */}
+          <div className="px-6 py-6">
+            <DialogDescription className="text-[15px] text-black font-700 leading-relaxed">
+              Ready to submit Sep 29 - Oct 5 for approval, for {selectedUserForSubmit}?
+            </DialogDescription>
+          </div>
+
+          {/* Footer personnalisé */}
+          <DialogFooter className="px-6 py-5 border-t border-gray-200 sm:justify-end space-x-3">
+            <button
+              onClick={handleCloseModal}
+              className="px-6 py-2 text-sm font-medium text-[#00a8e1] hover:text-[#0096ca] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmSubmit}
+              className="px-6 py-2 text-sm font-semibold bg-[#00a8e1] hover:bg-[#0096ca] text-white transition-colors tracking-wide"
+            >
+              SUBMIT
             </button>
           </DialogFooter>
         </DialogContent>
