@@ -216,7 +216,7 @@ const ApprovalsPage = () => {
                   </button>
                 </div>
               </div>
-              <div className="bg-gray-100 text-sm px-5 py-3 font-medium">
+              <div className="bg-[#f2f6f8] text-sm px-5 py-3 font-medium">
                 Sep 22, 2025 - Sep 28, 2025
               </div>
               <div className="grid grid-cols-4 text-xs uppercase text-gray-400 px-5 py-3 border-b border-gray-200">
@@ -235,7 +235,7 @@ const ApprovalsPage = () => {
 
             {/* Week 2 */}
             <div className="border border-gray-200 rounded-sm">
-              <div className="bg-gray-100 text-sm px-5 py-3 font-medium">
+              <div className="bg-[#f2f6f8] text-sm px-5 py-3 font-medium">
                 Jun 9, 2025 - Jun 15, 2025
               </div>
               <div className="grid grid-cols-4 text-xs uppercase text-gray-400 px-5 py-3 border-b border-gray-200">
@@ -385,7 +385,7 @@ const ApprovalsPage = () => {
               </div>
         
               {/* Date Header */}
-              <div className="bg-gray-100 text-sm font-medium px-4 py-3 border-b border-gray-200">
+              <div className="bg-[#f2f6f8] text-sm font-medium px-4 py-3 border-b border-gray-200">
                 Sep 29, 2025 - Oct 5, 2025
               </div>
         
@@ -415,14 +415,14 @@ const ApprovalsPage = () => {
                     <div className="flex justify-center">
                       <Popover>
                         <PopoverTrigger asChild>
-                          <button className="h-8 w-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
+                          <button className="h-8 w-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-[#f2f6f8] rounded">
                             <MoreVertical className="h-4 w-4" />
                           </button>
                         </PopoverTrigger>
                         <PopoverContent className="w-32 p-0" align="end">
                           <button
                             onClick={() => handleSubmitTime(row.name)}
-                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-[#f2f6f8]"
                           >
                             SUBMIT
                           </button>
@@ -480,7 +480,7 @@ const ApprovalsPage = () => {
           
                 {/* Première période - Aug 18, 2025 */}
                 <div className="border border-gray-200 rounded-sm">
-                  <div className="bg-gray-100 text-sm px-4 py-3 font-medium">
+                  <div className="bg-[#f2f6f8] text-sm px-4 py-3 font-medium">
                     Aug 18, 2025 - Aug 24, 2025
                   </div>
                   
@@ -496,7 +496,7 @@ const ApprovalsPage = () => {
                     <div className="text-sm text-gray-900">[SAMPLE] Lara Peterson</div>
                     <div className="text-sm text-gray-900 text-right">12:00:00</div>
                     <div className="text-right">
-                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-200 text-green-800">
                         Approved
                       </span>
                     </div>
@@ -505,7 +505,7 @@ const ApprovalsPage = () => {
           
                 {/* Deuxième période - Jun 23, 2025 */}
                 <div className="border border-gray-200 rounded-sm">
-                  <div className="bg-gray-100 text-sm px-4 py-3 font-medium">
+                  <div className="bg-[#f2f6f8] text-sm px-4 py-3 font-medium">
                     Jun 23, 2025 - Jun 29, 2025
                   </div>
                   
@@ -521,7 +521,7 @@ const ApprovalsPage = () => {
                     <div className="text-sm text-gray-900">[SAMPLE] Amy Smith</div>
                     <div className="text-sm text-gray-900 text-right">12:00:00</div>
                     <div className="text-right">
-                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-400 text-gray-800">
                         Withdrawn
                       </span>
                     </div>
@@ -530,7 +530,7 @@ const ApprovalsPage = () => {
           
                 {/* Troisième période - Jun 16, 2025 */}
                 <div className="border border-gray-200 rounded-sm">
-                  <div className="bg-gray-100 text-sm px-4 py-3 font-medium">
+                  <div className="bg-[#f2f6f8] text-sm px-4 py-3 font-medium">
                     Jun 16, 2025 - Jun 22, 2025
                   </div>
                   
@@ -546,7 +546,7 @@ const ApprovalsPage = () => {
                     <div className="text-sm text-gray-900">[SAMPLE] Amy Smith</div>
                     <div className="text-sm text-gray-900 text-right">11:00:00</div>
                     <div className="text-right">
-                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-200 text-green-800">
                         Approved
                       </span>
                     </div>
@@ -573,7 +573,7 @@ const ApprovalsPage = () => {
               className={`px-8 py-3 text-sm font-semibold border border-b-0 ${
                 activeTab === "pending" 
                   ? "border-gray-300 bg-white text-gray-800" 
-                  : "border-gray-200 bg-gray-100 text-gray-500"
+                  : "border-gray-200 bg-[#f2f6f8] text-gray-500"
               }`}
             >
               PENDING
@@ -583,7 +583,7 @@ const ApprovalsPage = () => {
               className={`px-8 py-3 text-sm font-semibold border border-b-0 ${
                 activeTab === "unsubmitted" 
                   ? "border-gray-300 bg-white text-gray-800" 
-                  : "border-gray-200 bg-gray-100 text-gray-500"
+                  : "border-gray-200 bg-[#f2f6f8] text-gray-500"
               }`}
             >
               UNSUBMITTED
@@ -593,7 +593,7 @@ const ApprovalsPage = () => {
               className={`px-8 py-3 text-sm font-semibold border border-b-0 ${
                 activeTab === "archive" 
                   ? "border-gray-300 bg-white text-gray-800" 
-                  : "border-gray-200 bg-gray-100 text-gray-500"
+                  : "border-gray-200 bg-[#f2f6f8] text-gray-500"
               }`}
             >
               ARCHIVE

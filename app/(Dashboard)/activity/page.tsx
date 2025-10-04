@@ -1,91 +1,275 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { useState, useRef, useEffect, MouseEvent, TouchEvent } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import React from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Calendar, ChevronLeft, ChevronRight, Info } from "lucide-react";
 
-const ActivityPage = () => {
+interface Position {
+  x: number;
+  y: number;
+}
+
+interface Tab {
+  name: string;
+  clickable: boolean;
+}
+
+interface TeamMember {
+  name: string;
+  avatar?: string;
+  initials?: string;
+  lastSeen: string;
+  color: string;
+}
+
+export default function ActivityPage() {
+  const [activeTab, setActiveTab] = useState<string>("Screenshots");
+  const [mapPosition, setMapPosition] = useState<Position>({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [startPos, setStartPos] = useState<Position>({ x: 0, y: 0 });
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  const tabs: Tab[] = [
+    { name: "ACTIVITY", clickable: false },
+    { name: "Screenshots", clickable: true },
+    { name: "Locations", clickable: true }
+  ];
+
+  const teamMembers: TeamMember[] = [
+    { name: "[SAMPLE] Amy Smith", avatar: "👩", lastSeen: "-", color: "bg-orange-400" },
+    { name: "[SAMPLE] James Anderson", avatar: "👨", lastSeen: "-", color: "bg-blue-400" },
+    { name: "[SAMPLE] Lara Peterson", avatar: "👩", lastSeen: "-", color: "bg-pink-400" },
+    { name: "[SAMPLE] Mike Johnson", avatar: "👨", lastSeen: "-", color: "bg-blue-500" },
+    { name: "maximedoaw204", initials: "MA", lastSeen: "-", color: "bg-green-500" },
+    { name: "tchekamboudanyls", initials: "TC", lastSeen: "-", color: "bg-yellow-500" }
+  ];
+
+  // Handlers pour le drag de la carte
+  const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    setStartPos({
+      x: e.clientX - mapPosition.x,
+      y: e.clientY - mapPosition.y
+    });
+  };
+
+  const handleMouseMove = (e: globalThis.MouseEvent) => {
+    if (!isDragging) return;
+    
+    const newX = e.clientX - startPos.x;
+    const newY = e.clientY - startPos.y;
+    
+    // Limites de déplacement (ajustables selon la taille de votre carte)
+    const maxX = 400;
+    const maxY = 300;
+    const minX = -400;
+    const minY = -300;
+    
+    setMapPosition({
+      x: Math.max(minX, Math.min(maxX, newX)),
+      y: Math.max(minY, Math.min(maxY, newY))
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setStartPos({
+      x: touch.clientX - mapPosition.x,
+      y: touch.clientY - mapPosition.y
+    });
+  };
+
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    
+    const touch = e.touches[0];
+    const newX = touch.clientX - startPos.x;
+    const newY = touch.clientY - startPos.y;
+    
+    const maxX = 400;
+    const maxY = 300;
+    const minX = -400;
+    const minY = -300;
+    
+    setMapPosition({
+      x: Math.max(minX, Math.min(maxX, newX)),
+      y: Math.max(minY, Math.min(maxY, newY))
+    });
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, startPos, mapPosition]);
+
   return (
-    <div className="px-2 sm:px-4 mt-17 md:px-6 lg:px-10">
-      {/* Bandeau Pro Feature */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center bg-blue-100 text-blue-500 mt-10 py-3 px-3 rounded-md">
-        <h2 className="font-bold my-auto">Pro feature</h2>
-        <Button className="bg-blue-500 text-white my-2 sm:my-0 sm:ml-3" variant="secondary">
-          Upgrade
-        </Button>
-      </div>
+    <div className="min-h-screen bg-[#f5f9fc] p-4 md:p-6 flex flex-col items-center mt-12 md:mt-20">
+      {/* Top Section */}
+      <div className="flex flex-col lg:flex-row lg:justify-between w-full max-w-7xl mb-6 md:mb-10 gap-4">
+        <div className="flex space-x-1">
+          {tabs.map((tab) => (
+            <Button
+              key={tab.name}
+              onClick={() => tab.clickable && setActiveTab(tab.name)}
+              variant={activeTab === tab.name ? "outline" : "ghost"}
+              className={`px-3 md:px-4 py-2 border text-xs md:text-sm font-medium transition-colors duration-200 rounded-none ${
+                activeTab === tab.name
+                  ? "bg-white border-gray-300 text-gray-900"
+                  : "bg-transparent border-gray-200 text-gray-500 hover:text-gray-800 hover:bg-transparent"
+              } ${!tab.clickable ? "cursor-default" : "cursor-pointer"}`}
+            >
+              {tab.name}
+            </Button>
+          ))}
+        </div>
 
-      {/* Bloc principal */}
-      <div className="bg-white w-full mt-6 rounded-md shadow-sm p-4 md:p-6 lg:p-8">
-        {/* Partie activité + GPS */}
-        <div className="mb-8">
-          <h3 className="text-sm md:text-md font-medium text-gray-600 mb-3">ACTIVITY</h3>
-          <h1 className="text-base md:text-lg font-semibold text-gray-800 mb-2">
-            Capture locations & screenshots
-          </h1>
-
-          <ul className="space-y-3 text-sm text-gray-600">
-            <li className="flex items-start">
-              <div className="w-2 h-2 bg-black rounded-full mt-1.5 mr-3"></div>
-              <span>Record location while the timer is running</span>
-            </li>
-            <li className="flex items-start">
-              <div className="w-2 h-2 bg-black rounded-full mt-1.5 mr-3"></div>
-              <span>See who's where currently on a map</span>
-            </li>
-            <li className="flex items-start">
-              <div className="w-2 h-2 bg-black rounded-full mt-1.5 mr-3"></div>
-              <span>See all sites your team visited during the day</span>
-            </li>
-          </ul>
-
-          <div className="mt-4">
-            <Link href={"#"}>
-              <h2 className="text-base md:text-lg font-semibold text-blue-500 hover:underline">
-                How GPS tracking works
-              </h2>
-            </Link>
+        <div className="flex items-center space-x-2 flex-wrap gap-2">
+          <Select defaultValue="teammates">
+            <SelectTrigger className="w-[140px] h-9 text-xs md:text-sm rounded-none border-gray-300">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="teammates">Teammates</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <div className="flex items-center border border-gray-300 bg-white">
+            <div className="flex items-center space-x-2 px-3 h-9 border-r border-gray-300">
+              <Calendar className="w-4 h-4 text-gray-600" />
+              <span className="text-xs md:text-sm text-gray-700 whitespace-nowrap">Today</span>
+            </div>
+            <Button variant="ghost" size="sm" className="h-9 px-3 rounded-none hover:bg-gray-100">
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="h-9 px-3 rounded-none hover:bg-gray-100 border-l border-gray-300">
+              <ChevronRight className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-
-        {/* Partie screenshots */}
-        <div className="mb-8">
-          <ul className="space-y-3 text-sm text-gray-600">
-            <li className="flex items-start">
-              <div className="w-2 h-2 bg-black rounded-full mt-1.5 mr-3"></div>
-              <span>Record screenshots every 5 min while the timer is running</span>
-            </li>
-            <li className="flex items-start">
-              <div className="w-2 h-2 bg-black rounded-full mt-1.5 mr-3"></div>
-              <span>Remind yourself what you've worked on during the day</span>
-            </li>
-            <li className="flex items-start">
-              <div className="w-2 h-2 bg-black rounded-full mt-1.5 mr-3"></div>
-              <span>See all the generated screenshots in one place</span>
-            </li>
-          </ul>
-
-          <div className="mt-4">
-            <Link href={"#"}>
-              <h2 className="text-base md:text-lg font-semibold text-blue-500 hover:underline">
-                How screenshots work
-              </h2>
-            </Link>
-          </div>
-        </div>
-
-        {/* Image */}
-        <div className="w-full flex ">
-          <Image
-            width={700}
-            height={700}
-            alt="activity-image"
-            src="/img23.png"
-            className="w-full max-w-3xl h-auto rounded-md"
-          />
-        </div>
       </div>
+
+      {/* Content Section - Screenshots */}
+      {activeTab === "Screenshots" && (
+        <div className="flex flex-col items-center justify-center text-center mt-10 px-4">
+          <span className="text-gray-700 text-base md:text-lg font-medium mb-4">maximedoaw204</span>
+          <div className="mb-6 relative w-48 h-48 md:w-56 md:h-56">
+            <Image
+              src="/img26.png"
+              alt="Screenshot illustration"
+              fill
+              className="object-contain"
+            />
+          </div>
+          <h2 className="text-gray-800 text-base md:text-lg font-semibold mb-2">No screenshots this day</h2>
+          <p className="text-gray-600 text-sm max-w-md mb-4">
+            Download desktop app to start capturing screenshots every 5 minutes while the timer is running.
+          </p>
+          <Button className="bg-[#00aaff] hover:bg-[#0090dd] text-white font-medium text-xs md:text-sm px-5 py-2">
+            GET SCREENSHOT RECORDING APP
+          </Button>
+        </div>
+      )}
+
+      {/* Content Section - Locations */}
+      {activeTab === "Locations" && (
+        <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4">
+          {/* Map Section */}
+          <Card className="flex-1 border-gray-200 overflow-hidden p-0">
+            <div 
+              ref={mapContainerRef}
+              className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden cursor-grab active:cursor-grabbing"
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div
+                className="absolute transition-transform duration-100 ease-out"
+                style={{
+                  transform: `translate(${mapPosition.x}px, ${mapPosition.y}px)`,
+                  width: '200%',
+                  height: '200%',
+                  left: '-50%',
+                  top: '-50%'
+                }}
+              >
+                <Image
+                  src="/img27.png"
+                  alt="World map showing locations"
+                  fill
+                  className="object-cover pointer-events-none select-none"
+                  draggable={false}
+                  priority
+                />
+              </div>
+            </div>
+          </Card>
+
+          {/* Sidebar Section */}
+          <Card className="w-full lg:w-80 border-gray-200 p-4">
+            <Alert className="bg-blue-50 border-blue-200 mb-4">
+              <Info className="h-4 w-4 text-blue-700" />
+              <AlertDescription className="text-blue-700 text-sm">
+                <p className="mb-1">No recorded locations for this day.</p>
+                <a href="#" className="text-blue-600 font-medium hover:underline">
+                  How to track location
+                </a>
+              </AlertDescription>
+            </Alert>
+
+            {/* Members List */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs text-gray-500 font-medium mb-2 px-2">
+                <span>MEMBER ▼</span>
+                <span>LAST SEEN ▼</span>
+              </div>
+              
+              {teamMembers.map((member, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between py-2 px-2 hover:bg-gray-50 rounded transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Avatar className={`w-8 h-8 ${member.color}`}>
+                      <AvatarFallback className={`${member.color} text-white text-sm`}>
+                        {member.avatar || member.initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm text-gray-800">{member.name}</span>
+                  </div>
+                  <span className="text-sm text-gray-500">{member.lastSeen}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
-};
-
-export default ActivityPage;
+}
