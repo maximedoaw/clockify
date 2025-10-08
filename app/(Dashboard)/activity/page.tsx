@@ -38,6 +38,7 @@ export default function ActivityPage() {
   const [mapPosition, setMapPosition] = useState<Position>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [startPos, setStartPos] = useState<Position>({ x: 0, y: 0 });
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const tabs: Tab[] = [
@@ -245,26 +246,38 @@ export default function ActivityPage() {
 
             {/* Members List */}
             <div className="space-y-1">
+              {/* Header avec tri dynamique */}
               <div className="flex items-center justify-between text-xs text-gray-500 font-medium mb-2 px-2">
-                <span>MEMBER ▼</span>
+                <button
+                  className="flex items-center gap-1 focus:outline-none"
+                  onClick={() => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+                  title="Trier la liste"
+                >
+                  <span>MEMBER</span>
+                  <span>{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                </button>
                 <span>LAST SEEN ▼</span>
               </div>
               
-              {teamMembers.map((member, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between py-2 px-2 hover:bg-gray-50 rounded transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Avatar className={`w-8 h-8 ${member.color}`}>
-                      <AvatarFallback className={`${member.color} text-white text-sm`}>
-                        {member.avatar || member.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm text-gray-800">{member.name}</span>
+              {/* Tri de la liste selon l'ordre */}
+              {[...teamMembers]
+                .slice()
+                .sort((a, b) => sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name))
+                .map((member, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between py-2 px-2 hover:bg-gray-50 rounded transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Avatar className={`w-8 h-8 ${member.color}`}>
+                        <AvatarFallback className={`${member.color} text-white text-sm`}>
+                          {member.avatar || member.initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm text-gray-800">{member.name}</span>
+                    </div>
+                    <span className="text-sm text-gray-500">{member.lastSeen}</span>
                   </div>
-                  <span className="text-sm text-gray-500">{member.lastSeen}</span>
-                </div>
               ))}
             </div>
           </Card>
