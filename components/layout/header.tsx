@@ -7,12 +7,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Settings, FileText, Users, MoreHorizontal, Clock, Bell, Puzzle } from "lucide-react"
+import { Settings, FileText, Users, MoreHorizontal, Clock, Puzzle } from "lucide-react"
 import { UserAvatar } from "../ui/user-avatar"
 import { useRouter } from "next/navigation"
 
 export function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isHelpDropdownOpen, setIsHelpDropdownOpen] = useState(false)
   const router = useRouter()
 
   return (
@@ -72,17 +73,37 @@ export function Header() {
             </div>
           </div>
 
-          {/* Notifications */}
-          <div className="relative">
-            <div className="w-6 h-6 rounded-full bg-clockify-light-gray flex items-center justify-center">
-               <Bell className="w-5 h-5 rounded-full bg-warning"/>
-            </div>
-          </div>
-
-          {/* Help */}
-          <div className="w-6 h-6 rounded-full bg-clockify-light-gray flex items-center justify-center">
-            <span className="text-xs text-clockify-gray">?</span>
-          </div>
+          {/* Help Dropdown */}
+          <DropdownMenu open={isHelpDropdownOpen} onOpenChange={setIsHelpDropdownOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-6 h-6 rounded-full bg-clockify-light-gray flex items-center justify-center hover:bg-clockify-border p-0 min-w-0"
+              >
+                <span className="text-xs text-clockify-gray">?</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="w-48 bg-popover border border-clockify-border shadow-lg rounded-lg p-0"
+              sideOffset={8}
+            >
+              <div className="py-2">
+                <DropdownMenuItem className="flex items-center px-4 py-3 hover:bg-clockify-light-gray cursor-pointer">
+                  <span className="text-sm text-clockify-dark">Help center</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="flex items-center px-4 py-3 hover:bg-clockify-light-gray cursor-pointer">
+                  <span className="text-sm text-clockify-dark">Tutorials</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="flex items-center px-4 py-3 hover:bg-clockify-light-gray cursor-pointer">
+                  <span className="text-sm text-clockify-dark">Contact support</span>
+                </DropdownMenuItem>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* User Menu */}
           <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>

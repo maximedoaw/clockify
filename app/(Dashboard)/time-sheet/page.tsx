@@ -241,11 +241,11 @@ export default function TimesheetPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 mt-16">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3">
+      <header className="bg-[#e4eaee] px-4 py-3 text-[#999]">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <h1 className="text-2xl font-semibold text-gray-800">Timesheet</h1>
+          <h1 className="text-2xl font-semibold text-[#999]">Timesheet</h1>
 
           <div className="flex items-center gap-3">
             <DropdownMenu>
@@ -328,9 +328,9 @@ export default function TimesheetPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-4">
         {/* Week Navigation */}
-        <div className="bg-blue-100 rounded-lg mb-4 overflow-x-auto lg:overflow-x-visible xl:overflow-x-visible">
+        <div className="bg-[#e4eaee] rounded-lg mb-4 overflow-x-auto lg:overflow-x-visible xl:overflow-x-visible">
           <div className="grid grid-cols-10 w-[900px] sm:w-[1100px] md:w-[1300px] lg:w-full min-w-[900px] sm:min-w-[1100px] md:min-w-[1300px] lg:min-w-0">
-            <div className="col-span-1 flex items-center justify-center px-3 py-3 w-full min-w-[120px] sm:min-w-[140px] md:min-w-[160px] lg:min-w-0 max-w-xs text-blue-600 font-medium text-center text-sm sm:text-base md:text-lg lg:text-lg">
+            <div className="col-span-1 flex items-center justify-center px-3 py-3 w-full min-w-[120px] sm:min-w-[140px] md:min-w-[160px] lg:min-w-0 max-w-xs text-[#999] font-medium text-center text-sm sm:text-base md:text-lg lg:text-lg">
               Projects
             </div>
             {weekDays.slice(1).map((day, index) => (
